@@ -141,11 +141,11 @@ export default function PokemonDetailPage() {
           <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">{formattedId}</p>
           <h1 className="flex items-center gap-2 text-2xl font-bold capitalize text-gray-800 dark:text-gray-100">
             {localizedName(pokemon.names, locale) || pokemon.name}
-            <WikiLink href={pokemonWikiUrl(pokemon.species_names?.en ?? pokemon.names.en)} />
+            <WikiLink href={pokemonWikiUrl(pokemon.species_names, pokemon.names, locale)} />
           </h1>
           <div className="mt-2 flex gap-2">
             {pokemon.types.map((tp) => (
-              <WikiLink key={tp.id} href={typeWikiUrl(tp.name)}>
+              <WikiLink key={tp.id} href={typeWikiUrl(tp.names, locale)}>
                 <TypeBadge name={tp.name} names={tp.names} />
               </WikiLink>
             ))}
@@ -206,7 +206,7 @@ export default function PokemonDetailPage() {
                   <p className="font-medium capitalize text-gray-800 dark:text-gray-200">
                     {localizedName(ability.names, locale)}
                   </p>
-                  <WikiLink href={abilityWikiUrl(ability.name)} />
+                  <WikiLink href={abilityWikiUrl(ability.names, locale)} />
                   {ability.is_hidden && (
                     <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                       {t('pokemon.hiddenAbility')}
@@ -234,7 +234,7 @@ export default function PokemonDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 text-sm capitalize text-gray-700 dark:text-gray-300"
                 >
                   {localizedName(m.names, locale) || m.name}
-                  <WikiLink href={moveWikiUrl(m.name)} />
+                  <WikiLink href={moveWikiUrl(m.names, locale)} />
                 </li>
               ))}
             </ul>

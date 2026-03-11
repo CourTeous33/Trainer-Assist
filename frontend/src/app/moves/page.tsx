@@ -186,7 +186,7 @@ export default function MovesPage() {
                 <td className="px-4 py-2.5 font-medium capitalize text-gray-800 dark:text-gray-200">
                   <span className="inline-flex items-center gap-1.5">
                     {localizedName(m.names, locale) || m.name}
-                    <WikiLink href={moveWikiUrl(m.name)} />
+                    <WikiLink href={moveWikiUrl(m.names, locale)} />
                   </span>
                 </td>
                 <td className="px-4 py-2.5">
@@ -215,7 +215,7 @@ export default function MovesPage() {
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 font-medium capitalize text-gray-800 dark:text-gray-200">
                 {localizedName(m.names, locale) || m.name}
-                <WikiLink href={moveWikiUrl(m.name)} />
+                <WikiLink href={moveWikiUrl(m.names, locale)} />
               </span>
               <TypeBadge name={m.type_ref.name} names={m.type_ref.names} />
             </div>
