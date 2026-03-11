@@ -1,0 +1,17 @@
+# Rust
+target/
+
+# Node
+node_modules/
+
+# Environment
+.env
+
+# Next.js
+.next/
+
+# Postgres data volume
+pgdata/
+
+# OS files
+.DS_Store
