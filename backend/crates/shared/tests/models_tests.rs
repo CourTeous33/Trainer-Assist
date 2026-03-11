@@ -6,6 +6,7 @@ fn localized_names_serializes_with_all_fields() {
         en: "Pikachu".to_string(),
         ja: Some("ピカチュウ".to_string()),
         zh: Some("皮卡丘".to_string()),
+        zh_pinyin: Some("pikaqiu pkq".to_string()),
     };
     let json = serde_json::to_string(&names).unwrap();
     assert!(json.contains("\"en\":\"Pikachu\""));
@@ -19,6 +20,7 @@ fn localized_names_skips_none_fields() {
         en: "Bulbasaur".to_string(),
         ja: None,
         zh: None,
+        zh_pinyin: None,
     };
     let json = serde_json::to_string(&names).unwrap();
     assert!(json.contains("\"en\":\"Bulbasaur\""));
@@ -45,6 +47,7 @@ fn pokemon_summary_roundtrip() {
             en: "Pikachu".to_string(),
             ja: Some("ピカチュウ".to_string()),
             zh: None,
+            zh_pinyin: None,
         },
         types: vec![TypeRef {
             id: 13,
@@ -53,9 +56,11 @@ fn pokemon_summary_roundtrip() {
                 en: "Electric".to_string(),
                 ja: Some("でんき".to_string()),
                 zh: None,
+                zh_pinyin: None,
             },
         }],
         sprite_url: "https://example.com/25.png".to_string(),
+        nicknames: Some("pika 皮神 皮卡 ピカ".to_string()),
     };
 
     let json = serde_json::to_string(&summary).unwrap();
@@ -64,6 +69,7 @@ fn pokemon_summary_roundtrip() {
     assert_eq!(deserialized.name, "pikachu");
     assert_eq!(deserialized.types.len(), 1);
     assert_eq!(deserialized.types[0].name, "Electric");
+    assert_eq!(deserialized.nicknames, Some("pika 皮神 皮卡 ピカ".to_string()));
 }
 
 #[test]
@@ -76,22 +82,24 @@ fn pokemon_detail_roundtrip() {
             en: "Charizard".to_string(),
             ja: Some("リザードン".to_string()),
             zh: Some("喷火龙".to_string()),
+            zh_pinyin: Some("penhuolong phl".to_string()),
         },
         species_names: LocalizedNames {
             en: "Charizard".to_string(),
             ja: Some("リザードン".to_string()),
             zh: Some("喷火龙".to_string()),
+            zh_pinyin: Some("penhuolong phl".to_string()),
         },
         types: vec![
             TypeRef {
                 id: 10,
                 name: "Fire".to_string(),
-                names: LocalizedNames { en: "Fire".to_string(), ja: None, zh: None },
+                names: LocalizedNames { zh_pinyin: None, en: "Fire".to_string(), ja: None, zh: None },
             },
             TypeRef {
                 id: 3,
                 name: "Flying".to_string(),
-                names: LocalizedNames { en: "Flying".to_string(), ja: None, zh: None },
+                names: LocalizedNames { zh_pinyin: None, en: "Flying".to_string(), ja: None, zh: None },
             },
         ],
         sprite_url: "https://example.com/6.png".to_string(),
@@ -105,14 +113,14 @@ fn pokemon_detail_roundtrip() {
         },
         abilities: vec![AbilityInfo {
             name: "Blaze".to_string(),
-            names: LocalizedNames { en: "Blaze".to_string(), ja: None, zh: None },
-            description: LocalizedNames { en: "Powers up Fire-type moves".to_string(), ja: None, zh: None },
+            names: LocalizedNames { zh_pinyin: None, en: "Blaze".to_string(), ja: None, zh: None },
+            description: LocalizedNames { zh_pinyin: None, en: "Powers up Fire-type moves".to_string(), ja: None, zh: None },
             is_hidden: false,
         }],
         moves: vec![PokemonMoveRef {
             id: 1,
             name: "Flamethrower".to_string(),
-            names: LocalizedNames { en: "Flamethrower".to_string(), ja: None, zh: None },
+            names: LocalizedNames { zh_pinyin: None, en: "Flamethrower".to_string(), ja: None, zh: None },
         }],
         height: 17,
         weight: 905,
@@ -151,11 +159,11 @@ fn move_summary_with_null_power() {
     let move_s = MoveSummary {
         id: 1,
         name: "Growl".to_string(),
-        names: LocalizedNames { en: "Growl".to_string(), ja: None, zh: None },
+        names: LocalizedNames { zh_pinyin: None, en: "Growl".to_string(), ja: None, zh: None },
         type_ref: TypeRef {
             id: 1,
             name: "Normal".to_string(),
-            names: LocalizedNames { en: "Normal".to_string(), ja: None, zh: None },
+            names: LocalizedNames { zh_pinyin: None, en: "Normal".to_string(), ja: None, zh: None },
         },
         power: None,
         accuracy: Some(100),

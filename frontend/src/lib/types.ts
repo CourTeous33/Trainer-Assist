@@ -2,6 +2,7 @@ export interface LocalizedNames {
   en: string;
   ja?: string;
   zh?: string;
+  zh_pinyin?: string;
 }
 
 export interface TypeRef {

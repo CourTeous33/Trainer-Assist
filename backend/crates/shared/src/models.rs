@@ -8,6 +8,20 @@ pub struct LocalizedNames {
     pub ja: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zh: Option<String>,
+    /// Pre-computed pinyin for the Chinese name (full + initials, space-separated).
+    /// e.g. "pikaqiu pkq" for 皮卡丘. Used for server-side search.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zh_pinyin: Option<String>,
+}
+
+impl LocalizedNames {
+    /// Check if a pre-lowercased search query matches any localized name or pinyin.
+    pub fn matches_search(&self, query: &str) -> bool {
+        self.en.to_lowercase().contains(query)
+            || self.ja.as_ref().map_or(false, |ja| ja.to_lowercase().contains(query))
+            || self.zh.as_ref().map_or(false, |zh| zh.to_lowercase().contains(query))
+            || self.zh_pinyin.as_ref().map_or(false, |py| py.contains(query))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,6 +32,9 @@ pub struct PokemonSummary {
     pub names: LocalizedNames,
     pub types: Vec<TypeRef>,
     pub sprite_url: String,
+    /// Space-separated nicknames/abbreviations for search (e.g. "lando tran").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nicknames: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

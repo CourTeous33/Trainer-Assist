@@ -48,19 +48,15 @@ pub async fn list_pokemon(
 
     let all: Vec<PokemonSummary> = serde_json::from_str(&data)?;
 
+    let search_lower = params.search.as_ref().map(|s| s.to_lowercase());
+
     let filtered: Vec<PokemonSummary> = all
         .into_iter()
         .filter(|p| {
-            if let Some(ref search) = params.search {
-                let search_lower = search.to_lowercase();
-                let matches_name = p.name.to_lowercase().contains(&search_lower);
-                let matches_ja = p.names.ja.as_ref()
-                    .map(|ja| ja.to_lowercase().contains(&search_lower))
-                    .unwrap_or(false);
-                let matches_zh = p.names.zh.as_ref()
-                    .map(|zh| zh.to_lowercase().contains(&search_lower))
-                    .unwrap_or(false);
-                if !matches_name && !matches_ja && !matches_zh {
+            if let Some(ref q) = search_lower {
+                let matched = p.names.matches_search(q)
+                    || p.nicknames.as_ref().map_or(false, |n| n.to_lowercase().contains(q.as_str()));
+                if !matched {
                     return false;
                 }
             }

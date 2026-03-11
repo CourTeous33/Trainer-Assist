@@ -27,7 +27,46 @@ async fn main() -> Result<()> {
 
     // Step 3: Transform
     tracing::info!("Step 3/4: Transforming data into models...");
-    let transformed = transform::transform(&parsed);
+    let mut transformed = transform::transform(&parsed);
+
+    // Step 3b: Load nicknames
+    let nicknames_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent().unwrap().parent().unwrap().parent().unwrap()
+        .join("data/nicknames.json");
+    match std::fs::read_to_string(&nicknames_path) {
+        Ok(nicknames_json) => {
+            let nicknames: serde_json::Value = serde_json::from_str(&nicknames_json)?;
+            if let Some(pokemon_nicks) = nicknames.get("pokemon").and_then(|v| v.as_object()) {
+                let mut count = 0;
+                for summary in &mut transformed.pokemon_summaries {
+                    let key = summary.species_id.to_string();
+                    if let Some(entry) = pokemon_nicks.get(&key) {
+                        let mut all_nicks: Vec<String> = Vec::new();
+                        for lang in &["en", "zh", "ja"] {
+                            if let Some(arr) = entry.get(*lang).and_then(|v| v.as_array()) {
+                                for nick in arr {
+                                    if let Some(s) = nick.as_str() {
+                                        if !s.is_empty() {
+                                            all_nicks.push(s.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if !all_nicks.is_empty() {
+                            summary.nicknames = Some(all_nicks.join(" "));
+                            count += 1;
+                        }
+                    }
+                }
+                tracing::info!("Loaded nicknames for {} Pokemon", count);
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            tracing::warn!("Nicknames file not found at {:?}", nicknames_path);
+        }
+        Err(e) => return Err(e).context("Failed to read nicknames.json"),
+    }
 
     // Step 4: Load into Redis
     tracing::info!("Step 4/4: Loading data into Redis...");

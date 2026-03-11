@@ -1,11 +1,37 @@
 use std::collections::{HashMap, HashSet};
 
+use pinyin::ToPinyin;
 use shared::models::{
     AbilityInfo, LocalizedNames, MoveSummary, PokemonDetail, PokemonMoveRef, PokemonSummary,
     Stats, TypeEfficacy, TypeRef,
 };
 
 use crate::parse::ParsedData;
+
+/// Compute pinyin search text for a Chinese string.
+/// Returns "fullpinyin initials" e.g. "pikaqiu pkq" for "皮卡丘".
+fn compute_pinyin(zh: &str) -> String {
+    let mut full = String::new();
+    let mut initials = String::new();
+    for c in zh.chars() {
+        if let Some(py) = c.to_pinyin() {
+            full.push_str(py.plain());
+            if let Some(first) = py.plain().chars().next() {
+                initials.push(first);
+            }
+        }
+    }
+    if full.is_empty() {
+        return String::new();
+    }
+    format!("{} {}", full, initials)
+}
+
+/// Build a LocalizedNames with auto-computed zh_pinyin.
+fn localized_names(en: String, ja: Option<String>, zh: Option<String>) -> LocalizedNames {
+    let zh_pinyin = zh.as_ref().map(|z| compute_pinyin(z)).filter(|p| !p.is_empty());
+    LocalizedNames { en, ja, zh, zh_pinyin }
+}
 
 pub struct TransformedData {
     pub pokemon_summaries: Vec<PokemonSummary>,
@@ -86,11 +112,11 @@ pub fn transform(data: &ParsedData) -> TransformedData {
             type_name_map.get(&t.id).map(|name| TypeRef {
                 id: t.id,
                 name: name.clone(),
-                names: LocalizedNames {
-                    en: name.clone(),
-                    ja: type_name_ja.get(&t.id).cloned(),
-                    zh: type_name_zh.get(&t.id).cloned(),
-                },
+                names: localized_names(
+                    name.clone(),
+                    type_name_ja.get(&t.id).cloned(),
+                    type_name_zh.get(&t.id).cloned(),
+                ),
             })
         })
         .collect();
@@ -182,16 +208,16 @@ pub fn transform(data: &ParsedData) -> TransformedData {
                 .or_default()
                 .push(AbilityInfo {
                     name: name.clone(),
-                    names: LocalizedNames {
-                        en: name.clone(),
-                        ja: ability_name_ja.get(&pa.ability_id).cloned(),
-                        zh: ability_name_zh.get(&pa.ability_id).cloned(),
-                    },
-                    description: LocalizedNames {
-                        en: ability_desc_en.get(&pa.ability_id).cloned().unwrap_or_default(),
-                        ja: ability_desc_ja.get(&pa.ability_id).cloned(),
-                        zh: ability_desc_zh.get(&pa.ability_id).cloned(),
-                    },
+                    names: localized_names(
+                        name.clone(),
+                        ability_name_ja.get(&pa.ability_id).cloned(),
+                        ability_name_zh.get(&pa.ability_id).cloned(),
+                    ),
+                    description: localized_names(
+                        ability_desc_en.get(&pa.ability_id).cloned().unwrap_or_default(),
+                        ability_desc_ja.get(&pa.ability_id).cloned(),
+                        ability_desc_zh.get(&pa.ability_id).cloned(),
+                    ),
                     is_hidden: pa.is_hidden == 1,
                 });
         }
@@ -477,17 +503,13 @@ pub fn transform(data: &ParsedData) -> TransformedData {
             }
         };
 
-        let names = LocalizedNames {
-            en: name.clone(),
-            ja: name_ja,
-            zh: name_zh,
-        };
+        let names = localized_names(name.clone(), name_ja, name_zh);
 
-        let species_names = LocalizedNames {
-            en: base_name.clone(),
-            ja: species_name_ja.get(&poke.species_id).cloned(),
-            zh: species_name_zh.get(&poke.species_id).cloned(),
-        };
+        let species_names = localized_names(
+            base_name.clone(),
+            species_name_ja.get(&poke.species_id).cloned(),
+            species_name_zh.get(&poke.species_id).cloned(),
+        );
 
         let mut types_with_slot = pokemon_type_map
             .get(&poke.id)
@@ -526,11 +548,11 @@ pub fn transform(data: &ParsedData) -> TransformedData {
                 move_name_map.get(&mid).map(|mname| PokemonMoveRef {
                     id: mid,
                     name: mname.clone(),
-                    names: LocalizedNames {
-                        en: mname.clone(),
-                        ja: move_name_ja.get(&mid).cloned(),
-                        zh: move_name_zh.get(&mid).cloned(),
-                    },
+                    names: localized_names(
+                        mname.clone(),
+                        move_name_ja.get(&mid).cloned(),
+                        move_name_zh.get(&mid).cloned(),
+                    ),
                 })
             })
             .collect();
@@ -545,6 +567,7 @@ pub fn transform(data: &ParsedData) -> TransformedData {
             names: names.clone(),
             types: types.clone(),
             sprite_url: sprite_url.clone(),
+            nicknames: None,
         };
 
         let detail = PokemonDetail {
@@ -617,11 +640,11 @@ pub fn transform(data: &ParsedData) -> TransformedData {
         .filter_map(|m| {
             let name = move_name_map.get(&m.id)?.clone();
             let type_ref = type_ref_map.get(&m.type_id)?.clone();
-            let names = LocalizedNames {
-                en: name.clone(),
-                ja: move_name_ja.get(&m.id).cloned(),
-                zh: move_name_zh.get(&m.id).cloned(),
-            };
+            let names = localized_names(
+                name.clone(),
+                move_name_ja.get(&m.id).cloned(),
+                move_name_zh.get(&m.id).cloned(),
+            );
             Some(MoveSummary {
                 id: m.id,
                 name,

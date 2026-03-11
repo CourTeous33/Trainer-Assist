@@ -10,6 +10,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { useLocale, localizedName } from '@/lib/i18n';
+import { matchesSearch } from '@/lib/search';
 import { moveWikiUrl } from '@/lib/wiki';
 import WikiLink from '@/components/WikiLink';
 
@@ -59,8 +60,7 @@ export default function MovesPage() {
   // Filter and sort
   const filtered = allMoves
     .filter((m) => {
-      if (search && !m.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
+      if (search && !matchesSearch(search, m.names)) return false;
       if (typeFilter && m.type_ref.id !== typeFilter) return false;
       if (classFilter && m.damage_class !== classFilter) return false;
       return true;

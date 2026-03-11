@@ -32,12 +32,13 @@ pub async fn list_moves(
 
     let all: Vec<MoveSummary> = serde_json::from_str(&data)?;
 
+    let search_lower = params.search.as_ref().map(|s| s.to_lowercase());
+
     let filtered: Vec<MoveSummary> = all
         .into_iter()
         .filter(|m| {
-            if let Some(ref search) = params.search {
-                let search_lower = search.to_lowercase();
-                if !m.name.to_lowercase().contains(&search_lower) {
+            if let Some(ref q) = search_lower {
+                if !m.names.matches_search(q) {
                     return false;
                 }
             }

@@ -1,5 +1,11 @@
 # CLAUDE.md — Trainer Assist
 
+## Workflow Rules
+
+- **Always restart backend after changes**: After modifying backend code (Rust crates), kill the running API process and restart it (`cargo run -p api` from `backend/`). Verify it's responding on port 3001.
+- **Re-seed after model/seed changes**: If you changed models (`shared/src/models.rs`) or the seed pipeline (`seed/src/`), run `make seed-local` before restarting the API.
+- **Do not kill Docker**: Infrastructure (Postgres, Redis) runs in Docker. Never stop Docker containers unless explicitly asked.
+
 ## Project Overview
 
 Pokemon toolbox web app. Rust/Axum backend + Next.js frontend. Data sourced from PokeAPI CSVs, stored in Redis as denormalized JSON. Teams stored in browser localStorage. No auth.
