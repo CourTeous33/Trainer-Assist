@@ -483,6 +483,12 @@ pub fn transform(data: &ParsedData) -> TransformedData {
             zh: name_zh,
         };
 
+        let species_names = LocalizedNames {
+            en: base_name.clone(),
+            ja: species_name_ja.get(&poke.species_id).cloned(),
+            zh: species_name_zh.get(&poke.species_id).cloned(),
+        };
+
         let mut types_with_slot = pokemon_type_map
             .get(&poke.id)
             .cloned()
@@ -546,6 +552,7 @@ pub fn transform(data: &ParsedData) -> TransformedData {
             species_id: poke.species_id,
             name,
             names,
+            species_names,
             types,
             sprite_url,
             stats,

@@ -34,6 +34,7 @@ pub struct PokemonDetail {
     pub species_id: i32,
     pub name: String,
     pub names: LocalizedNames,
+    pub species_names: LocalizedNames,
     pub types: Vec<TypeRef>,
     pub sprite_url: String,
     pub stats: Stats,

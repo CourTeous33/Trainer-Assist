@@ -48,6 +48,7 @@ const pikachu: PokemonDetail = {
   species_id: 25,
   name: 'pikachu',
   names: { en: 'Pikachu' },
+  species_names: { en: 'Pikachu' },
   types: [{ id: 13, name: 'electric', names: { en: 'Electric' } }],
   sprite_url: 'https://example.com/25.png',
   stats: { hp: 35, attack: 55, defense: 40, special_attack: 50, special_defense: 50, speed: 90 },

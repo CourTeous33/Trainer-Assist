@@ -12,6 +12,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
 import { useLocale, localizedName } from '@/lib/i18n';
 import { formatPokemonId } from '@/lib/format';
+import { pokemonWikiUrl, typeWikiUrl, abilityWikiUrl, moveWikiUrl } from '@/lib/wiki';
+import WikiLink from '@/components/WikiLink';
 
 export default function PokemonDetailPage() {
   const { t, locale } = useLocale();
@@ -137,12 +139,15 @@ export default function PokemonDetailPage() {
             className="h-48 w-48"
           />
           <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">{formattedId}</p>
-          <h1 className="text-2xl font-bold capitalize text-gray-800 dark:text-gray-100">
+          <h1 className="flex items-center gap-2 text-2xl font-bold capitalize text-gray-800 dark:text-gray-100">
             {localizedName(pokemon.names, locale) || pokemon.name}
+            <WikiLink href={pokemonWikiUrl(pokemon.species_names?.en ?? pokemon.names.en)} />
           </h1>
           <div className="mt-2 flex gap-2">
             {pokemon.types.map((tp) => (
-              <TypeBadge key={tp.id} name={tp.name} names={tp.names} />
+              <WikiLink key={tp.id} href={typeWikiUrl(tp.name)}>
+                <TypeBadge name={tp.name} names={tp.names} />
+              </WikiLink>
             ))}
           </div>
         </div>
@@ -201,6 +206,7 @@ export default function PokemonDetailPage() {
                   <p className="font-medium capitalize text-gray-800 dark:text-gray-200">
                     {localizedName(ability.names, locale)}
                   </p>
+                  <WikiLink href={abilityWikiUrl(ability.name)} />
                   {ability.is_hidden && (
                     <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                       {t('pokemon.hiddenAbility')}
@@ -225,9 +231,10 @@ export default function PokemonDetailPage() {
               {pokemon.moves.map((m) => (
                 <li
                   key={m.id}
-                  className="px-4 py-2 text-sm capitalize text-gray-700 dark:text-gray-300"
+                  className="flex items-center gap-2 px-4 py-2 text-sm capitalize text-gray-700 dark:text-gray-300"
                 >
                   {localizedName(m.names, locale) || m.name}
+                  <WikiLink href={moveWikiUrl(m.name)} />
                 </li>
               ))}
             </ul>

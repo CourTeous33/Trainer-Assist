@@ -46,6 +46,7 @@ export interface PokemonDetail {
   species_id: number;
   name: string;
   names: LocalizedNames;
+  species_names: LocalizedNames;
   types: TypeRef[];
   sprite_url: string;
   stats: Stats;

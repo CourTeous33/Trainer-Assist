@@ -77,6 +77,11 @@ fn pokemon_detail_roundtrip() {
             ja: Some("リザードン".to_string()),
             zh: Some("喷火龙".to_string()),
         },
+        species_names: LocalizedNames {
+            en: "Charizard".to_string(),
+            ja: Some("リザードン".to_string()),
+            zh: Some("喷火龙".to_string()),
+        },
         types: vec![
             TypeRef {
                 id: 10,

@@ -10,6 +10,8 @@ import ErrorMessage from '@/components/ErrorMessage';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { useLocale, localizedName } from '@/lib/i18n';
+import { moveWikiUrl } from '@/lib/wiki';
+import WikiLink from '@/components/WikiLink';
 
 type SortKey = 'name' | 'power' | 'accuracy' | 'pp';
 type SortDir = 'asc' | 'desc';
@@ -133,8 +135,8 @@ export default function MovesPage() {
               onClick={() => setClassFilter(classFilter === dc ? '' : dc)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 classFilter === dc
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               {t(damageClassKey[dc])}
@@ -182,7 +184,10 @@ export default function MovesPage() {
             {filtered.map((m) => (
               <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td className="px-4 py-2.5 font-medium capitalize text-gray-800 dark:text-gray-200">
-                  {localizedName(m.names, locale) || m.name}
+                  <span className="inline-flex items-center gap-1.5">
+                    {localizedName(m.names, locale) || m.name}
+                    <WikiLink href={moveWikiUrl(m.name)} />
+                  </span>
                 </td>
                 <td className="px-4 py-2.5">
                   <TypeBadge name={m.type_ref.name} names={m.type_ref.names} />
@@ -194,7 +199,7 @@ export default function MovesPage() {
                   {m.accuracy ? `${m.accuracy}%` : '—'}
                 </td>
                 <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{m.pp ?? '—'}</td>
-                <td className="px-4 py-2.5 capitalize text-gray-700">
+                <td className="px-4 py-2.5 capitalize text-gray-700 dark:text-gray-300">
                   {m.damage_class}
                 </td>
               </tr>
@@ -208,18 +213,21 @@ export default function MovesPage() {
         {filtered.map((m) => (
           <div key={m.id} className="rounded-xl bg-white p-4 shadow-md dark:bg-gray-800">
             <div className="flex items-center justify-between">
-              <p className="font-medium capitalize text-gray-800 dark:text-gray-200">{localizedName(m.names, locale) || m.name}</p>
+              <span className="inline-flex items-center gap-1.5 font-medium capitalize text-gray-800 dark:text-gray-200">
+                {localizedName(m.names, locale) || m.name}
+                <WikiLink href={moveWikiUrl(m.name)} />
+              </span>
               <TypeBadge name={m.type_ref.name} names={m.type_ref.names} />
             </div>
             <div className="mt-2 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
               <span>
-                Power: <strong className="text-gray-700 dark:text-gray-300">{m.power ?? '—'}</strong>
+                {t('moves.power')}: <strong className="text-gray-700 dark:text-gray-300">{m.power ?? '—'}</strong>
               </span>
               <span>
-                Acc: <strong className="text-gray-700 dark:text-gray-300">{m.accuracy ? `${m.accuracy}%` : '—'}</strong>
+                {t('moves.accuracy')}: <strong className="text-gray-700 dark:text-gray-300">{m.accuracy ? `${m.accuracy}%` : '—'}</strong>
               </span>
               <span>
-                PP: <strong className="text-gray-700 dark:text-gray-300">{m.pp ?? '—'}</strong>
+                {t('moves.pp')}: <strong className="text-gray-700 dark:text-gray-300">{m.pp ?? '—'}</strong>
               </span>
             </div>
             <p className="mt-1 text-xs capitalize text-gray-400 dark:text-gray-500">
