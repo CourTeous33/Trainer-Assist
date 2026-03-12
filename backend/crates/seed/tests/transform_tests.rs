@@ -325,18 +325,90 @@ fn move_summaries_have_type_ref() {
 }
 
 #[test]
-fn results_are_sorted_by_id() {
+fn results_are_sorted_by_species_id() {
     let csvs = make_csvs();
     let parsed = parse_all(&csvs).unwrap();
     let result = transform(&parsed);
 
-    let ids: Vec<i32> = result.pokemon_summaries.iter().map(|p| p.id).collect();
-    let mut sorted = ids.clone();
+    let species_ids: Vec<(i32, i32)> = result.pokemon_summaries.iter()
+        .map(|p| (p.species_id, p.id))
+        .collect();
+    let mut sorted = species_ids.clone();
     sorted.sort();
-    assert_eq!(ids, sorted, "Pokemon summaries should be sorted by ID");
+    assert_eq!(species_ids, sorted, "Pokemon summaries should be sorted by (species_id, id)");
+
+    // Verify alternate forms come after their base form
+    let raichu_positions: Vec<(usize, &str, i32)> = result.pokemon_summaries.iter()
+        .enumerate()
+        .filter(|(_, p)| p.species_id == 26)
+        .map(|(i, p)| (i, p.name.as_str(), p.id))
+        .collect();
+    assert_eq!(raichu_positions.len(), 2, "Should have base Raichu and Alolan Raichu");
+    assert!(raichu_positions[0].2 < raichu_positions[1].2,
+        "Base Raichu (id={}) should come before Alolan Raichu (id={})",
+        raichu_positions[0].2, raichu_positions[1].2);
 
     let move_ids: Vec<i32> = result.move_summaries.iter().map(|m| m.id).collect();
     let mut sorted_moves = move_ids.clone();
     sorted_moves.sort();
     assert_eq!(move_ids, sorted_moves, "Move summaries should be sorted by ID");
+}
+
+#[test]
+fn pokemon_has_pinyin() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    let pikachu = result.pokemon_details.iter().find(|p| p.id == 25).unwrap();
+    assert_eq!(pikachu.names.zh, Some("皮卡丘".to_string()));
+    let zh_pinyin = pikachu.names.zh_pinyin.as_ref().expect("Should have zh_pinyin");
+    assert!(zh_pinyin.contains("pikaqiu"), "Full pinyin should be present, got: {}", zh_pinyin);
+    assert!(zh_pinyin.contains("pkq"), "Pinyin initials should be present, got: {}", zh_pinyin);
+}
+
+#[test]
+fn pokemon_without_chinese_name_has_no_pinyin() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    // Charizard has no Chinese name in test data
+    let charizard = result.pokemon_details.iter().find(|p| p.id == 6).unwrap();
+    assert!(charizard.names.zh.is_none());
+    assert!(charizard.names.zh_pinyin.is_none());
+}
+
+#[test]
+fn nicknames_default_to_none() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    // All summaries should have None nicknames from transform (loaded separately in main)
+    for summary in &result.pokemon_summaries {
+        assert!(summary.nicknames.is_none(), "Nicknames should be None after transform for {}", summary.name);
+    }
+}
+
+#[test]
+fn move_names_have_pinyin() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    // Thunder Shock has Japanese name but no Chinese name in test data
+    let thunder_shock = result.move_summaries.iter().find(|m| m.name == "Thunder Shock").unwrap();
+    assert!(thunder_shock.names.zh_pinyin.is_none(), "No Chinese name means no pinyin");
+}
+
+#[test]
+fn type_names_have_pinyin_when_chinese_available() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    // Our test data doesn't include Chinese type names, so pinyin should be None
+    let electric = result.type_refs.iter().find(|t| t.name == "Electric").unwrap();
+    assert!(electric.names.zh_pinyin.is_none());
 }

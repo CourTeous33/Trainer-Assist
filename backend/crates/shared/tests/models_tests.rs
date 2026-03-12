@@ -176,3 +176,126 @@ fn move_summary_with_null_power() {
     assert!(deserialized.power.is_none());
     assert_eq!(deserialized.accuracy, Some(100));
 }
+
+// --- matches_search tests ---
+
+#[test]
+fn matches_search_english_name() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: None,
+        zh_pinyin: None,
+    };
+    assert!(names.matches_search("pika"));
+    assert!(names.matches_search("pikachu"));
+    assert!(!names.matches_search("bulba"));
+}
+
+#[test]
+fn matches_search_case_insensitive() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: None,
+        zh_pinyin: None,
+    };
+    assert!(names.matches_search("PIKACHU".to_lowercase().as_str()));
+    assert!(names.matches_search("pikachu"));
+}
+
+#[test]
+fn matches_search_japanese_name() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: Some("ピカチュウ".to_string()),
+        zh: None,
+        zh_pinyin: None,
+    };
+    assert!(names.matches_search("ピカ"));
+    assert!(!names.matches_search("リザ"));
+}
+
+#[test]
+fn matches_search_chinese_name() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: Some("皮卡丘".to_string()),
+        zh_pinyin: None,
+    };
+    assert!(names.matches_search("皮卡"));
+    assert!(!names.matches_search("喷火"));
+}
+
+#[test]
+fn matches_search_pinyin_full() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: Some("皮卡丘".to_string()),
+        zh_pinyin: Some("pikaqiu pkq".to_string()),
+    };
+    assert!(names.matches_search("pikaqiu"));
+}
+
+#[test]
+fn matches_search_pinyin_initials() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: Some("皮卡丘".to_string()),
+        zh_pinyin: Some("pikaqiu pkq".to_string()),
+    };
+    assert!(names.matches_search("pkq"));
+}
+
+#[test]
+fn matches_search_no_match() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: Some("ピカチュウ".to_string()),
+        zh: Some("皮卡丘".to_string()),
+        zh_pinyin: Some("pikaqiu pkq".to_string()),
+    };
+    assert!(!names.matches_search("charizard"));
+}
+
+#[test]
+fn matches_search_empty_query_matches_nothing() {
+    let names = LocalizedNames {
+        en: "Pikachu".to_string(),
+        ja: None,
+        zh: None,
+        zh_pinyin: None,
+    };
+    // Empty string is a substring of everything
+    assert!(names.matches_search(""));
+}
+
+#[test]
+fn nicknames_none_skipped_in_serialization() {
+    let summary = PokemonSummary {
+        id: 1,
+        species_id: 1,
+        name: "bulbasaur".to_string(),
+        names: LocalizedNames { en: "Bulbasaur".to_string(), ja: None, zh: None, zh_pinyin: None },
+        types: vec![],
+        sprite_url: "".to_string(),
+        nicknames: None,
+    };
+    let json = serde_json::to_string(&summary).unwrap();
+    assert!(!json.contains("nicknames"));
+}
+
+#[test]
+fn zh_pinyin_skipped_when_none() {
+    let names = LocalizedNames {
+        en: "Bulbasaur".to_string(),
+        ja: None,
+        zh: None,
+        zh_pinyin: None,
+    };
+    let json = serde_json::to_string(&names).unwrap();
+    assert!(!json.contains("zh_pinyin"));
+}

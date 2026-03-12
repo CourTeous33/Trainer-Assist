@@ -590,8 +590,8 @@ pub fn transform(data: &ParsedData) -> TransformedData {
         pokemon_details.push(detail);
     }
 
-    pokemon_summaries.sort_by_key(|p| p.id);
-    pokemon_details.sort_by_key(|p| p.id);
+    pokemon_summaries.sort_by_key(|p| (p.species_id, p.id));
+    pokemon_details.sort_by_key(|p| (p.species_id, p.id));
 
     // -----------------------------------------------------------------------
     // Build type -> pokemon mapping
