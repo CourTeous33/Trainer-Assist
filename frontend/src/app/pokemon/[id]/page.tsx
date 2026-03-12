@@ -66,12 +66,14 @@ export default function PokemonDetailPage() {
     [types]
   );
 
-  const typeAnalysis = useMemo(() => {
-    if (!pokemon || types.length === 0 || efficacyMap.size === 0) return null;
+  // Defensive + offensive type analysis in a single pass
+  const { typeAnalysis, offensiveAnalysis } = useMemo(() => {
+    if (!pokemon || types.length === 0 || efficacyMap.size === 0)
+      return { typeAnalysis: null, offensiveAnalysis: null };
 
-    const defIds = pokemon.types.map(tp => tp.id);
-    const typeMap = new Map(types.map(tp => [tp.id, tp.name]));
+    const pokeTypeIds = pokemon.types.map(tp => tp.id);
 
+    // Defensive: how much damage does each attacking type deal to this Pokemon?
     const def4x: string[] = [];
     const def2x: string[] = [];
     const def1x: string[] = [];
@@ -79,22 +81,43 @@ export default function PokemonDetailPage() {
     const def0_25x: string[] = [];
     const def0x: string[] = [];
 
-    for (const atkType of types) {
-      let multiplier = 1;
-      for (const defId of defIds) {
-        const factor = efficacyMap.get(`${atkType.id}:${defId}`);
-        if (factor !== undefined) multiplier *= factor / 100;
+    // Offensive: best STAB coverage against each defending type
+    const superEffective: string[] = [];
+    const normal: string[] = [];
+    const notVeryEffective: string[] = [];
+    const noEffect: string[] = [];
+
+    for (const otherType of types) {
+      // Defensive: otherType attacks this Pokemon
+      let defMult = 1;
+      for (const defId of pokeTypeIds) {
+        const factor = efficacyMap.get(`${otherType.id}:${defId}`);
+        if (factor !== undefined) defMult *= factor / 100;
       }
-      const name = typeMap.get(atkType.id) ?? '';
-      if (multiplier === 0) def0x.push(name);
-      else if (multiplier >= 4) def4x.push(name);
-      else if (multiplier >= 2) def2x.push(name);
-      else if (multiplier === 1) def1x.push(name);
-      else if (multiplier >= 0.5) def0_5x.push(name);
-      else def0_25x.push(name);
+      if (defMult === 0) def0x.push(otherType.name);
+      else if (defMult >= 4) def4x.push(otherType.name);
+      else if (defMult >= 2) def2x.push(otherType.name);
+      else if (defMult === 1) def1x.push(otherType.name);
+      else if (defMult >= 0.5) def0_5x.push(otherType.name);
+      else def0_25x.push(otherType.name);
+
+      // Offensive: this Pokemon's STAB attacks otherType
+      let bestAtk = 0;
+      for (const atkId of pokeTypeIds) {
+        const factor = efficacyMap.get(`${atkId}:${otherType.id}`);
+        const mult = factor !== undefined ? factor / 100 : 1;
+        if (mult > bestAtk) bestAtk = mult;
+      }
+      if (bestAtk === 0) noEffect.push(otherType.name);
+      else if (bestAtk >= 2) superEffective.push(otherType.name);
+      else if (bestAtk >= 1) normal.push(otherType.name);
+      else notVeryEffective.push(otherType.name);
     }
 
-    return { def4x, def2x, def1x, def0_5x, def0_25x, def0x };
+    return {
+      typeAnalysis: { def4x, def2x, def1x, def0_5x, def0_25x, def0x },
+      offensiveAnalysis: { superEffective, normal, notVeryEffective, noEffect },
+    };
   }, [pokemon, types, efficacyMap]);
 
   if (loading) return <LoadingSpinner />;
@@ -165,7 +188,7 @@ export default function PokemonDetailPage() {
         {/* Type Effectiveness */}
         {typeAnalysis && (
           <section className="mt-8">
-            <h2 className="mb-3 text-lg font-semibold text-gray-700 dark:text-gray-200">{t('pokemon.typeEffectiveness')}</h2>
+            <h2 className="mb-3 text-lg font-semibold text-gray-700 dark:text-gray-200">{t('types.defensive')}</h2>
             <div className="space-y-2">
               <TypeEffectRow label={t('types.weakTo4x')} items={typeAnalysis.def4x} color="text-red-700 dark:text-red-400" typeNamesMap={typeNamesMap} />
               <TypeEffectRow label={t('types.weakTo2x')} items={typeAnalysis.def2x} color="text-red-500 dark:text-red-300" typeNamesMap={typeNamesMap} />
@@ -173,6 +196,19 @@ export default function PokemonDetailPage() {
               <TypeEffectRow label={t('types.resists0_5x')} items={typeAnalysis.def0_5x} color="text-green-600 dark:text-green-400" typeNamesMap={typeNamesMap} />
               <TypeEffectRow label={t('types.resists0_25x')} items={typeAnalysis.def0_25x} color="text-green-700 dark:text-green-300" typeNamesMap={typeNamesMap} />
               <TypeEffectRow label={t('types.immuneTo')} items={typeAnalysis.def0x} color="text-blue-600 dark:text-blue-400" typeNamesMap={typeNamesMap} />
+            </div>
+          </section>
+        )}
+
+        {/* Offensive Analysis */}
+        {offensiveAnalysis && (
+          <section className="mt-8">
+            <h2 className="mb-3 text-lg font-semibold text-gray-700 dark:text-gray-200">{t('types.offensive')}</h2>
+            <div className="space-y-2">
+              <TypeEffectRow label={t('types.offensiveSuperEffective')} items={offensiveAnalysis.superEffective} color="text-red-500 dark:text-red-300" typeNamesMap={typeNamesMap} />
+              <TypeEffectRow label={t('types.offensiveNormal')} items={offensiveAnalysis.normal} color="text-gray-600 dark:text-gray-400" typeNamesMap={typeNamesMap} />
+              <TypeEffectRow label={t('types.offensiveNotVeryEffective')} items={offensiveAnalysis.notVeryEffective} color="text-green-600 dark:text-green-400" typeNamesMap={typeNamesMap} />
+              <TypeEffectRow label={t('types.offensiveNoEffect')} items={offensiveAnalysis.noEffect} color="text-blue-600 dark:text-blue-400" typeNamesMap={typeNamesMap} />
             </div>
           </section>
         )}
