@@ -32,8 +32,8 @@ make dev-api         # Run API
 make dev-frontend    # Run frontend
 
 # Testing
-cd backend && cargo test          # 37 backend tests
-cd frontend && npm test           # 42 frontend tests
+cd backend && cargo test          # 52 backend tests
+cd frontend && npm test           # 63 frontend tests
 
 # Linting
 cd backend && cargo clippy
@@ -44,7 +44,7 @@ cd frontend && npm run lint
 
 ### Crates
 
-- **`crates/shared/src/models.rs`** — All data models: `PokemonSummary`, `PokemonDetail`, `Stats`, `TypeRef`, `TypeEfficacy`, `MoveSummary`, `PokemonMoveRef`, `AbilityInfo` (with `is_hidden`), `LocalizedNames`
+- **`crates/shared/src/models.rs`** — All data models: `PokemonSummary` (with `nicknames`), `PokemonDetail` (with `species_names`), `Stats`, `TypeRef`, `TypeEfficacy`, `MoveSummary`, `PokemonMoveRef`, `AbilityInfo` (with `is_hidden`), `LocalizedNames` (with `zh_pinyin`, `matches_search()`)
 - **`crates/shared/src/redis_keys.rs`** — Redis key constants and helper functions
 - **`crates/api/src/routes/`** — REST handlers: `pokemon.rs`, `types.rs`, `moves.rs`, `teams.rs` (placeholder)
 - **`crates/api/src/error.rs`** — `AppError` with `not_found()` / `internal()`, implements `IntoResponse`
@@ -73,6 +73,9 @@ GET /api/v1/health
 - **Moves**: Only level-up moves (`pokemon_move_method_id=1`), deduplicated across version groups
 - **CSV source**: `raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/`
 - **Sprites**: `raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png`
+- **Pinyin**: Pre-computed via Rust `pinyin` crate during transform, stored as `zh_pinyin` on `LocalizedNames` (e.g. "pikaqiu pkq")
+- **Nicknames**: Loaded from `data/nicknames.json` during seed, stored as space-separated string on `PokemonSummary.nicknames`
+- **Sort order**: Pokemon list sorted by `(species_id, id)` so alternate forms appear after their base species
 
 ## Frontend Structure
 
@@ -91,6 +94,8 @@ GET /api/v1/health
 - `src/lib/types.ts` — TypeScript interfaces matching Rust models
 - `src/lib/team-store.ts` — localStorage CRUD for teams
 - `src/lib/format.ts` — `formatPokemonId()`
+- `src/lib/search.ts` — `matchesSearch()` i18n-aware search with pinyin support (pre-computed + `pinyin-pro` fallback)
+- `src/lib/wiki.ts` — Locale-aware wiki URL generators (Bulbapedia/52Poke/ポケモンWiki)
 - `src/lib/i18n/` — `LocaleProvider`, `useLocale()`, `localizedName()`, translations (en/ja/zh)
 - `src/lib/theme/` — `ThemeProvider`, `useTheme()` — light/dark/system with localStorage persistence
 
@@ -104,11 +109,20 @@ GET /api/v1/health
 - `MobileNav` — Bottom navigation bar
 - `LanguageSwitcher` — EN/JA/ZH dropdown
 - `ThemeSwitcher` — Light/Dark/System dropdown
+- `WikiLink` — External link to wiki (Bulbapedia/52Poke/ポケモンWiki), supports wrapping children
 - `LoadingSpinner`, `ErrorMessage` — Status indicators
 
 ### i18n Pattern
 
-All named entities use `LocalizedNames { en, ja?, zh? }`. The `localizedName(names, locale)` helper selects the correct language, falling back to English. UI text uses `t('key')` from `useLocale()` with parameter interpolation via `{variable}` syntax.
+All named entities use `LocalizedNames { en, ja?, zh?, zh_pinyin? }`. The `localizedName(names, locale)` helper selects the correct language, falling back to English. UI text uses `t('key')` from `useLocale()` with parameter interpolation via `{variable}` syntax.
+
+### Search
+
+Server-side search (`LocalizedNames::matches_search()` in shared crate) and client-side search (`matchesSearch()` in `search.ts`) both match against en/ja/zh names and pinyin. Pokemon search additionally matches against `nicknames`. Pinyin is pre-computed during seeding; client-side falls back to `pinyin-pro` when `zh_pinyin` is absent.
+
+### Wiki Links
+
+Locale-aware links: English → Bulbapedia (`bulbapedia.bulbagarden.net`), Chinese → 52Poke (`wiki.52poke.com`), Japanese → ポケモンWiki (`wiki.xn--rckteqa2e.com`). Pokemon detail pages link species names (using `species_names` to handle alternate forms). Supports Pokemon, types, abilities, and moves.
 
 ### Theme System
 
@@ -120,22 +134,23 @@ Class-based dark mode via Tailwind CSS v4 `@custom-variant dark (&:where(.dark, 
 
 ## Testing
 
-### Backend Tests (37 total)
+### Backend Tests (52 total)
 
 Located in `crates/*/tests/` directories:
-- `shared/tests/models_tests.rs` — Serialization roundtrips
+- `shared/tests/models_tests.rs` — Serialization roundtrips, `matches_search` (en/ja/zh/pinyin), nicknames/zh_pinyin serialization
 - `shared/tests/redis_keys_tests.rs` — Key generation
 - `seed/tests/parse_tests.rs` — CSV parsing with fixtures
-- `seed/tests/transform_tests.rs` — Form filtering, type exclusion, stats, i18n, abilities, moves
+- `seed/tests/transform_tests.rs` — Form filtering, type exclusion, stats, i18n, abilities, moves, pinyin computation, species_id sort order, nicknames default
 - `api/tests/error_tests.rs` — HTTP status codes, JSON error bodies
 
-### Frontend Tests (42 total)
+### Frontend Tests (63 total)
 
 Using Vitest + @testing-library/react + happy-dom:
 - `src/lib/__tests__/format.test.ts`
 - `src/lib/__tests__/team-store.test.ts`
 - `src/lib/__tests__/i18n.test.ts`
 - `src/lib/__tests__/api.test.ts`
+- `src/lib/__tests__/search.test.ts` — matchesSearch: en/ja/zh, pinyin (pre-computed + fallback), edge cases
 - `src/hooks/__tests__/use-debounce.test.ts`
 - `src/components/__tests__/StatBar.test.tsx`
 - `src/lib/__tests__/theme.test.ts`
