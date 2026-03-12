@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { getPokemonList, getTypes } from '@/lib/api';
 import type { PokemonSummary, TypeRef } from '@/lib/types';
 import SearchInput from '@/components/SearchInput';
-import TypeBadge from '@/components/TypeBadge';
+import TypeKeypad from '@/components/TypeKeypad';
 import PokemonCard from '@/components/PokemonCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -95,43 +95,21 @@ export default function PokemonPage() {
         className="mb-4"
       />
 
-      {/* Type filter (select up to 2) */}
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setTypeFilters([])}
-          className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
-            typeFilters.length === 0
-              ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800'
-              : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          {t('pokemon.allTypes')}
-        </button>
-        {types.map((tp) => {
-          const isSelected = typeFilters.includes(tp.name);
-          return (
-            <button
-              key={tp.id}
-              onClick={() => {
-                setTypeFilters((prev) => {
-                  if (isSelected) return prev.filter((n) => n !== tp.name);
-                  if (prev.length >= 2) return [prev[1], tp.name];
-                  return [...prev, tp.name];
-                });
-              }}
-              className={`transition-all ${
-                isSelected
-                  ? 'scale-110 ring-2 ring-offset-1 ring-gray-800 rounded-full'
-                  : typeFilters.length > 0
-                    ? 'opacity-50 hover:opacity-75'
-                    : 'hover:scale-105'
-              }`}
-            >
-              <TypeBadge name={tp.name} names={tp.names} />
-            </button>
-          );
-        })}
-      </div>
+      {/* Type filter keypad (select up to 2) */}
+      <TypeKeypad
+        types={types}
+        selectedNames={typeFilters}
+        onToggle={(tp) => {
+          setTypeFilters((prev) => {
+            if (prev.includes(tp.name)) return prev.filter((n) => n !== tp.name);
+            if (prev.length >= 2) return [prev[1], tp.name];
+            return [...prev, tp.name];
+          });
+        }}
+        allLabel={t('pokemon.allTypes')}
+        onClearAll={() => setTypeFilters([])}
+        className="mb-4"
+      />
 
       {/* Generation filter */}
       <div className="mb-6">

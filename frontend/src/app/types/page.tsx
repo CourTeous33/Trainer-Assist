@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { getTypes, getTypeEfficacy, getTypePokemon } from '@/lib/api';
 import type { TypeRef, TypeEfficacy, PokemonSummary, LocalizedNames } from '@/lib/types';
 import TypeBadge from '@/components/TypeBadge';
+import TypeKeypad from '@/components/TypeKeypad';
 import PokemonCard from '@/components/PokemonCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -82,7 +83,7 @@ export default function TypesPage() {
   );
 
   // Build efficacy analysis
-  const getAnalysis = () => {
+  const analysis = useMemo(() => {
     if (selectedTypes.length === 0 || efficacyMap.size === 0) return null;
 
     const selectedIds = selectedTypes.map((t) => t.id);
@@ -168,12 +169,10 @@ export default function TypesPage() {
       offSuper, offNormal, offNotVery, offNone,
       offDualWalls, offDualResists,
     };
-  };
+  }, [selectedTypes, types, efficacyMap]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
-
-  const analysis = getAnalysis();
 
   return (
     <div className="py-6">
@@ -188,27 +187,13 @@ export default function TypesPage() {
         {tr('types.instruction')}
       </p>
 
-      {/* Type selector grid */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {types.map((t) => {
-          const isSelected = selectedTypes.some((s) => s.id === t.id);
-          return (
-            <button
-              key={t.id}
-              onClick={() => toggleType(t)}
-              className={`transition-all ${
-                isSelected
-                  ? 'scale-110 ring-2 ring-offset-1 ring-gray-800 rounded-full'
-                  : selectedTypes.length > 0
-                    ? 'opacity-50 hover:opacity-75'
-                    : 'hover:scale-105'
-              }`}
-            >
-              <TypeBadge name={t.name} names={t.names} />
-            </button>
-          );
-        })}
-      </div>
+      {/* Type selector keypad */}
+      <TypeKeypad
+        types={types}
+        selectedNames={selectedTypes.map((s) => s.name)}
+        onToggle={toggleType}
+        className="mb-6"
+      />
 
       {/* Analysis */}
       {analysis && (
