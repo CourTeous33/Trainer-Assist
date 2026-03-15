@@ -82,7 +82,7 @@ export default function HomePage() {
           <span>MIT License</span>
           <span>&middot;</span>
           <a
-            href="https://github.com/chongbinyao/trainer-assist"
+            href="https://github.com/CourTeous33/Trainer-Assist"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
