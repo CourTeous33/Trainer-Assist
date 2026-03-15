@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MobileNav from "@/components/MobileNav";
+import Footer from "@/components/Footer";
 import { LocaleProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
 
@@ -32,9 +33,10 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LocaleProvider>
-            <main className="max-w-7xl mx-auto px-4 pb-20">
+            <main className="max-w-7xl mx-auto px-4 pb-4">
               {children}
             </main>
+            <Footer />
             <MobileNav />
           </LocaleProvider>
         </ThemeProvider>

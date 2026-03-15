@@ -33,7 +33,7 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         </p>
         <div className="mt-1.5 flex gap-1">
           {pokemon.types.map((t) => (
-            <TypeBadge key={t.id} name={t.name} names={t.names} />
+            <TypeBadge key={t.id} name={t.name} names={t.names} responsiveIcon />
           ))}
         </div>
       </div>
