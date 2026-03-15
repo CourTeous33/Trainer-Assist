@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Top half (red) -->
+  <path d="M50 5 A45 45 0 0 1 95 50 H62.5 A12.5 12.5 0 0 0 37.5 50 H5 A45 45 0 0 1 50 5Z" fill="#EE1515"/>
+  <!-- Bottom half (white) -->
+  <path d="M5 50 H37.5 A12.5 12.5 0 0 0 62.5 50 H95 A45 45 0 0 1 5 50Z" fill="#fff"/>
+  <!-- Center band -->
+  <line x1="5" y1="50" x2="37.5" y2="50" stroke="#222" stroke-width="4"/>
+  <line x1="62.5" y1="50" x2="95" y2="50" stroke="#222" stroke-width="4"/>
+  <!-- Outer ring -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="#222" stroke-width="5"/>
+  <!-- Center button -->
+  <circle cx="50" cy="50" r="12.5" fill="#fff" stroke="#222" stroke-width="4"/>
+  <circle cx="50" cy="50" r="6" fill="#fff" stroke="#222" stroke-width="3"/>
+</svg>
