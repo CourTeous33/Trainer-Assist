@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  buildBreakdownRows,
   buildEfficacyLookup,
   computeAnswer,
   checkAnswer,
@@ -320,5 +321,145 @@ describe('checkAnswer — not_effective polarity', () => {
     const ans = computeAnswer(TYPES, lookup, q);
     const result = checkAnswer([ROCK.id, WATER.id], ans);
     expect(result.isPerfect).toBe(true);
+  });
+});
+
+describe('buildBreakdownRows', () => {
+  it('SE defensive — Bug/Rock: Rock row neutralizes Bug\'s weakness to Fire & Flying', () => {
+    const q = {
+      subject: [BUG, ROCK],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(2);
+    const bugRow = rows.find((r) => r.subject.id === BUG.id)!;
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+
+    // Bug's individual weaknesses (≥2x): Rock, Fire, Flying.
+    expect(new Set(bugRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['rock', 'fire', 'flying']),
+    );
+    // Bug doesn't resist any of Rock's weaknesses (Water, Grass) in the fixture.
+    expect(bugRow.neutralizers).toEqual([]);
+
+    // Rock's individual weaknesses (≥2x): Water, Grass.
+    expect(new Set(rockRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['water', 'grass']),
+    );
+    // Rock resists Fire (0.5x) and Flying (0.5x) — both are Bug's weaknesses,
+    // so they're trap explainers in Rock's row.
+    expect(new Set(rockRow.neutralizers.map((e) => e.type.name))).toEqual(
+      new Set(['fire', 'flying']),
+    );
+    // Displayed multiplier is Rock's resist (0.5x), not Bug's weakness.
+    expect(rockRow.neutralizers.find((e) => e.type.name === 'fire')!.multiplier).toBe(0.5);
+    expect(rockRow.neutralizers.find((e) => e.type.name === 'flying')!.multiplier).toBe(0.5);
+  });
+
+  it('NE defensive — Rock/Fire: Rock row neutralizes its own weakness to Grass via Fire', () => {
+    const q = {
+      subject: [ROCK, FIRE],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+    const fireRow = rows.find((r) => r.subject.id === FIRE.id)!;
+
+    // Rock's individual resists (≤0.5x): Fire, Flying.
+    expect(new Set(rockRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['fire', 'flying']),
+    );
+    // Fire resists Grass (0.5x) but Rock is weak to Grass (2x) — combined 1x,
+    // not in NE set. Trap explainer in Rock's row, displayed as Rock's weakness.
+    expect(rockRow.neutralizers.map((e) => e.type.name)).toEqual(['grass']);
+    expect(rockRow.neutralizers[0].multiplier).toBe(2);
+
+    // Fire's individual resists (≤0.5x): Grass.
+    expect(fireRow.primary.map((e) => e.type.name)).toEqual(['grass']);
+    // Rock doesn't resist any of Fire's weaknesses (Water) in the fixture.
+    expect(fireRow.neutralizers).toEqual([]);
+  });
+
+  it('SE primary sorted descending; SE neutralizers sorted ascending (strongest resist first)', () => {
+    const q = {
+      subject: [BUG, ROCK],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+    // Primary: Water 2x, Grass 2x — both equal so sort is stable; just check
+    // every primary multiplier is the threshold or stronger.
+    rockRow.primary.forEach((e) => expect(e.multiplier).toBeGreaterThanOrEqual(2));
+    // Neutralizers: Fire 0.5x, Flying 0.5x — both 0.5x; no immunities here.
+    rockRow.neutralizers.forEach((e) => expect(e.multiplier).toBeLessThanOrEqual(0.5));
+  });
+
+  it('offensive smoke — neutralizers always empty', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'offensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(2);
+    rows.forEach((row) => {
+      expect(row.neutralizers).toEqual([]);
+    });
+  });
+
+  it('single-subject question — one row, neutralizers empty', () => {
+    const q = {
+      subject: [BUG],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].subject.id).toBe(BUG.id);
+    expect(rows[0].neutralizers).toEqual([]);
+    // Primary still computed correctly.
+    expect(new Set(rows[0].primary.map((e) => e.type.name))).toEqual(
+      new Set(['rock', 'fire', 'flying']),
+    );
+  });
+
+  it('SE defensive — Ghost/Normal: immunities create mutual neutralization', () => {
+    const q = {
+      subject: [GHOST, NORMAL],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const ghostRow = rows.find((r) => r.subject.id === GHOST.id)!;
+    const normalRow = rows.find((r) => r.subject.id === NORMAL.id)!;
+
+    // Normal is weak to Fighting (2x), Ghost is immune (0x).
+    // Combined 2 × 0 = 0, NOT super-effective overall.
+    // Fighting appears as a neutralizer in Ghost's row, displayed as 0x.
+    const ghostFighting = ghostRow.neutralizers.find((e) => e.type.name === 'fighting');
+    expect(ghostFighting).toBeDefined();
+    expect(ghostFighting!.multiplier).toBe(0);
+
+    // Ghost is weak to Ghost (2x) but Normal is immune to Ghost (0x).
+    // Combined 2 × 0 = 0, NOT super-effective overall.
+    // Ghost-type appears as a neutralizer in Normal's row, displayed as 0x.
+    const normalGhost = normalRow.neutralizers.find((e) => e.type.name === 'ghost');
+    expect(normalGhost).toBeDefined();
+    expect(normalGhost!.multiplier).toBe(0);
   });
 });

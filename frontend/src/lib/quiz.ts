@@ -36,6 +36,17 @@ export interface AnswerCheck {
   isPerfect: boolean;
 }
 
+export interface AttackerEntry {
+  type: TypeRef;
+  multiplier: number;
+}
+
+export interface BreakdownRow {
+  subject: TypeRef;
+  primary: AttackerEntry[];
+  neutralizers: AttackerEntry[];
+}
+
 export type EfficacyLookup = (attackerId: number, defenderId: number) => number;
 
 export function buildEfficacyLookup(efficacy: TypeEfficacy[]): EfficacyLookup {
@@ -125,4 +136,43 @@ export function mulberry32(seed: number): () => number {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+export function buildBreakdownRows(
+  question: QuizQuestion,
+  answer: QuizAnswer,
+): BreakdownRow[] {
+  const isSE = question.polarity === 'super_effective';
+  const passes = (m: number) => (isSE ? m >= 2 : m <= 0.5);
+  const inverse = (m: number) => (isSE ? m <= 0.5 : m >= 2);
+  const includeNeutralizers = question.direction === 'defensive' && question.subject.length === 2;
+
+  return question.subject.map((subject) => {
+    const other = question.subject.find((s) => s.id !== subject.id);
+
+    type Joined = { type: TypeRef; multiplier: number; otherMult: number };
+    const subjectParts: Joined[] = answer.all.map((slot) => {
+      const myMult =
+        slot.breakdown?.find((p) => p.subject.id === subject.id)?.multiplier
+        ?? slot.multiplier;
+      const otherMult =
+        (other && slot.breakdown?.find((p) => p.subject.id === other.id)?.multiplier)
+        ?? 1;
+      return { type: slot.type, multiplier: myMult, otherMult };
+    });
+
+    const primary: AttackerEntry[] = subjectParts
+      .filter((m) => passes(m.multiplier))
+      .map((m) => ({ type: m.type, multiplier: m.multiplier }))
+      .sort((a, b) => (isSE ? b.multiplier - a.multiplier : a.multiplier - b.multiplier));
+
+    const neutralizers: AttackerEntry[] = includeNeutralizers
+      ? subjectParts
+          .filter((m) => inverse(m.multiplier) && passes(m.otherMult))
+          .map((m) => ({ type: m.type, multiplier: m.multiplier }))
+          .sort((a, b) => (isSE ? a.multiplier - b.multiplier : b.multiplier - a.multiplier))
+      : [];
+
+    return { subject, primary, neutralizers };
+  });
 }
