@@ -78,7 +78,7 @@ describe('buildEfficacyLookup', () => {
 
 describe('computeAnswer — defensive', () => {
   it('multiplies multipliers across a dual-type defender (Fire/Flying weak to Rock 4x, Electric/Water 2x)', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const byName = (n: string) => a.all.find((s) => s.type.name === n)!.multiplier;
@@ -93,7 +93,7 @@ describe('computeAnswer — defensive', () => {
   });
 
   it('handles immunities — Normal/Ghost is immune to Fighting and Ghost, weak only to Dark', () => {
-    const q = { subject: [NORMAL, GHOST], direction: 'defensive' as const };
+    const q = { subject: [NORMAL, GHOST], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const byName = (n: string) => a.all.find((s) => s.type.name === n)!.multiplier;
@@ -105,7 +105,7 @@ describe('computeAnswer — defensive', () => {
   });
 
   it('single-type defender uses the lookup directly', () => {
-    const q = { subject: [FIRE], direction: 'defensive' as const };
+    const q = { subject: [FIRE], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
     const correctNames = a.correct.map((s) => s.type.name).sort();
     expect(correctNames).toEqual(['rock', 'water']);
@@ -114,7 +114,7 @@ describe('computeAnswer — defensive', () => {
 
 describe('computeAnswer — offensive', () => {
   it('uses the BEST multiplier across a dual attacker (Fire/Flying super-effective vs Bug/Grass/Ice/Steel union)', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const correctNames = a.correct.map((s) => s.type.name).sort();
@@ -123,7 +123,7 @@ describe('computeAnswer — offensive', () => {
   });
 
   it('single-type attacker uses the lookup directly', () => {
-    const q = { subject: [WATER], direction: 'offensive' as const };
+    const q = { subject: [WATER], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
     const correctNames = a.correct.map((s) => s.type.name).sort();
     expect(correctNames).toEqual(['fire', 'rock']);
@@ -132,8 +132,8 @@ describe('computeAnswer — offensive', () => {
 
 describe('computeAnswer — breakdown', () => {
   it('includes per-subject breakdown only for dual-type questions', () => {
-    const dual = { subject: [FIRE, FLYING], direction: 'defensive' as const };
-    const single = { subject: [FIRE], direction: 'defensive' as const };
+    const dual = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
+    const single = { subject: [FIRE], direction: 'defensive' as const, polarity: 'super_effective' as const };
 
     const dualA = computeAnswer(TYPES, lookup, dual);
     const singleA = computeAnswer(TYPES, lookup, single);
@@ -143,7 +143,7 @@ describe('computeAnswer — breakdown', () => {
   });
 
   it('defensive breakdown reports each subject multiplier and they multiply to the result', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const rock = a.all.find((s) => s.type.name === 'rock')!;
@@ -159,7 +159,7 @@ describe('computeAnswer — breakdown', () => {
   });
 
   it('offensive breakdown reports each subject multiplier and the result is the max', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     // Fire→Fighting = 1x (default), Flying→Fighting = 2x. Max = 2x.
@@ -174,7 +174,7 @@ describe('computeAnswer — breakdown', () => {
 });
 
 describe('checkAnswer', () => {
-  const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+  const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
   const ans = computeAnswer(TYPES, lookup, q);
   // Correct set for Fire/Flying defensive: rock, electric, water.
 

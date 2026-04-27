@@ -1,10 +1,12 @@
 import type { TypeEfficacy, TypeRef } from './types';
 
 export type QuizDirection = 'offensive' | 'defensive';
+export type QuizPolarity = 'super_effective' | 'not_effective';
 
 export interface QuizQuestion {
   subject: TypeRef[];
   direction: QuizDirection;
+  polarity: QuizPolarity;
 }
 
 export interface AnswerSlot {
@@ -60,7 +62,7 @@ export function pickQuestion(
     const idx = Math.floor(rng() * pool.length);
     subject.push(pool.splice(idx, 1)[0]);
   }
-  return { subject, direction };
+  return { subject, direction, polarity: 'super_effective' };
 }
 
 export function computeAnswer(
