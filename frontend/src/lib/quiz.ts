@@ -55,6 +55,7 @@ export function pickQuestion(
   }
   const numTypes = rng() < 0.5 ? 1 : 2;
   const direction: QuizDirection = rng() < 0.5 ? 'offensive' : 'defensive';
+  const polarity: QuizPolarity = rng() < 0.5 ? 'super_effective' : 'not_effective';
 
   const pool = types.slice();
   const subject: TypeRef[] = [];
@@ -62,7 +63,7 @@ export function pickQuestion(
     const idx = Math.floor(rng() * pool.length);
     subject.push(pool.splice(idx, 1)[0]);
   }
-  return { subject, direction, polarity: 'super_effective' };
+  return { subject, direction, polarity };
 }
 
 export function computeAnswer(

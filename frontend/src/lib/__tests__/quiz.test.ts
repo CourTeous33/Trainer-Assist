@@ -213,6 +213,7 @@ describe('pickQuestion', () => {
       const q = pickQuestion(TYPES, rng);
       expect([1, 2]).toContain(q.subject.length);
       expect(['offensive', 'defensive']).toContain(q.direction);
+      expect(['super_effective', 'not_effective']).toContain(q.polarity);
       if (q.subject.length === 2) {
         expect(q.subject[0].id).not.toBe(q.subject[1].id);
       }
@@ -223,6 +224,23 @@ describe('pickQuestion', () => {
     const a = pickQuestion(TYPES, mulberry32(1));
     const b = pickQuestion(TYPES, mulberry32(1));
     expect(a.direction).toBe(b.direction);
+    expect(a.polarity).toBe(b.polarity);
     expect(a.subject.map((s) => s.id)).toEqual(b.subject.map((s) => s.id));
+  });
+
+  it('produces both polarities across many rolls', () => {
+    const rng = mulberry32(7);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      seen.add(pickQuestion(TYPES, rng).polarity);
+      if (seen.size === 2) break;
+    }
+    expect(seen).toEqual(new Set(['super_effective', 'not_effective']));
+  });
+
+  it('polarity is deterministic given a seeded RNG', () => {
+    const a = pickQuestion(TYPES, mulberry32(42));
+    const b = pickQuestion(TYPES, mulberry32(42));
+    expect(a.polarity).toBe(b.polarity);
   });
 });
