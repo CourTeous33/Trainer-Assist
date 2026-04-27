@@ -244,3 +244,81 @@ describe('pickQuestion', () => {
     expect(a.polarity).toBe(b.polarity);
   });
 });
+
+describe('computeAnswer — defensive × not_effective', () => {
+  it('single-type defender — picks attackers with ≤ 0.5× into Fire', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // From the fixture: Grass→Fire = 0.5x. (No others ≤ 0.5x in fixture.)
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toEqual(['grass']);
+  });
+
+  it('dual-type defender — multiplied product ≤ 0.5× (Fire/Flying resists Grass at 0.25×)', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const grass = a.all.find((s) => s.type.name === 'grass')!;
+    expect(grass.multiplier).toBe(0.25);
+    expect(a.correct.some((s) => s.type.name === 'grass')).toBe(true);
+  });
+
+  it('immunity — 0× attackers count as not_effective (Normal/Ghost resists Fighting & Ghost)', () => {
+    const q = {
+      subject: [NORMAL, GHOST],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toContain('fighting');
+    expect(correctNames).toContain('ghost');
+  });
+});
+
+describe('computeAnswer — offensive × not_effective', () => {
+  it('single-type attacker — picks defenders that take ≤ 0.5× from Fire', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // Fire→Rock = 0.5x and Fire→Water = 0.5x in the fixture.
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toEqual(['rock', 'water']);
+  });
+
+  it('dual-type attacker — defender resists both (Fire/Flying are both ≤ 0.5× into Rock)', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // Fire→Rock = 0.5, Flying→Rock = 0.5, max = 0.5 → in set.
+    expect(a.correct.some((s) => s.type.name === 'rock')).toBe(true);
+    // Fire→Grass = 2x, so Grass is NOT in the resisted set even though Flying→Grass = 2x.
+    expect(a.correct.some((s) => s.type.name === 'grass')).toBe(false);
+  });
+});
+
+describe('checkAnswer — not_effective polarity', () => {
+  it('flags a perfect resisted answer', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const ans = computeAnswer(TYPES, lookup, q);
+    const result = checkAnswer([ROCK.id, WATER.id], ans);
+    expect(result.isPerfect).toBe(true);
+  });
+});

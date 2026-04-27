@@ -84,7 +84,9 @@ export function computeAnswer(
       ? { type: t, multiplier: mult, breakdown: parts }
       : { type: t, multiplier: mult };
   });
-  const correct = all.filter((slot) => slot.multiplier >= 2);
+  const passes = (m: number) =>
+    question.polarity === 'super_effective' ? m >= 2 : m <= 0.5;
+  const correct = all.filter((slot) => passes(slot.multiplier));
   return { correct, all };
 }
 
