@@ -88,10 +88,15 @@ export default function QuizPage() {
 
   const missedIds = result ? new Set(result.missed.map((m) => m.type.id)) : undefined;
 
+  const isResisted = question.polarity === 'not_effective';
   const promptKey =
     question.direction === 'defensive'
-      ? 'quiz.directionDefensive'
-      : 'quiz.directionOffensive';
+      ? isResisted
+        ? 'quiz.directionDefensiveResisted'
+        : 'quiz.directionDefensive'
+      : isResisted
+        ? 'quiz.directionOffensiveResisted'
+        : 'quiz.directionOffensive';
 
   const [promptBefore, promptAfter] = tr(promptKey).split('{types}');
 
