@@ -1,24 +1,30 @@
-.PHONY: up down seed dev-api dev-frontend dev build clippy test logs
+.PHONY: up down seed dev-api dev-frontend dev build clippy test logs infra-up infra-down
 
-# Docker (all services)
+COMPOSE     := docker compose
+COMPOSE_DEV := docker compose -f docker-compose.yml -f docker-compose.dev.yml
+
+# Docker (production: base compose only — host ports are NOT published)
 up:
-	docker compose up -d --build
+	$(COMPOSE) up -d --build
 
 down:
-	docker compose down
+	$(COMPOSE) down
 
 seed:
-	docker compose run --rm seed
+	$(COMPOSE) run --rm seed
 
 logs:
-	docker compose logs -f
+	$(COMPOSE) logs -f
 
-# Local dev (outside Docker, uses .env ports)
+# Local dev (host ports published via docker-compose.dev.yml so cargo/npm can connect)
 infra-up:
-	docker compose up -d postgres redis
+	$(COMPOSE_DEV) up -d postgres redis
 
 infra-down:
-	docker compose down
+	$(COMPOSE_DEV) down
+
+dev-up:
+	$(COMPOSE_DEV) up -d --build
 
 dev-api:
 	cd backend && cargo run -p api

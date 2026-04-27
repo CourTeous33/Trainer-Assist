@@ -8,6 +8,8 @@ node_modules/
 .env
 .env.production
 .env.local
+.env.bak*
+.env.*.bak
 
 # Next.js
 .next/

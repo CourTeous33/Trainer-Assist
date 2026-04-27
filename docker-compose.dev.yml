@@ -1,0 +1,19 @@
+# Local development overlay: exposes Postgres/Redis/API/Frontend ports to the host
+# so a developer can run cargo / npm dev servers against the docker-managed infra.
+#
+# NOT auto-loaded. Apply explicitly with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# or use the dev-* / infra-* targets in the Makefile.
+services:
+  postgres:
+    ports:
+      - "5433:5432"
+  redis:
+    ports:
+      - "6380:6379"
+  api:
+    ports:
+      - "3001:3001"
+  frontend:
+    ports:
+      - "3000:3000"
