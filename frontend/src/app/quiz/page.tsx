@@ -184,7 +184,7 @@ export default function QuizPage() {
 
           {answer.correct.length === 0 ? (
             <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
-              {tr('quiz.noSuperEffective')}
+              {tr(isResisted ? 'quiz.noResisted' : 'quiz.noSuperEffective')}
             </p>
           ) : (
             <FeedbackList
@@ -220,7 +220,7 @@ export default function QuizPage() {
           )}
           {result.extra.length > 0 && (
             <FeedbackList
-              label={tr('quiz.feedbackExtra')}
+              label={tr(isResisted ? 'quiz.feedbackExtraResisted' : 'quiz.feedbackExtra')}
               slots={result.extra}
               color="text-orange-600 dark:text-orange-400"
               typeNamesMap={typeNamesMap}
