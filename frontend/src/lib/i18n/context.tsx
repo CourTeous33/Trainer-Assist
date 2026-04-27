@@ -21,6 +21,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem('trainer-assist-locale') as Locale | null;
     if (saved && translations[saved]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- post-hydration localStorage read; lazy init would cause SSR/CSR text mismatch
       setLocaleState(saved);
     }
   }, []);

@@ -36,11 +36,11 @@ export default function TypesPage() {
   // Fetch pokemon with selected types
   useEffect(() => {
     if (selectedTypes.length === 0) {
-      setTypePokemon([]);
+      // No clear needed: the pokemon list section is gated on `analysis` being non-null.
       return;
     }
 
-    setPokemonLoading(true);
+    setPokemonLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
     getTypePokemon(selectedTypes[0].id)
       .then((pokemon) => {
         if (selectedTypes.length === 2) {

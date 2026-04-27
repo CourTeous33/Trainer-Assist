@@ -29,7 +29,7 @@ export default function PokemonDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
     setError('');
 
     Promise.all([getPokemon(id), getTypes(), getTypeEfficacy()])

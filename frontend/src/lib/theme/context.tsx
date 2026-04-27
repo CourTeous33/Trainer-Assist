@@ -29,6 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem('trainer-assist-theme') as Theme | null;
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- post-hydration localStorage read; lazy init would cause SSR/CSR class mismatch
       setThemeState(saved);
     }
   }, []);

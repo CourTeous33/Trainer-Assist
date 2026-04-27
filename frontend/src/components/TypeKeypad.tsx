@@ -52,9 +52,7 @@ export default function TypeKeypad({
             className={`${btnBase} text-white ${
               isSelected
                 ? 'ring-2 ring-offset-1 ring-gray-800 dark:ring-white'
-                : selectedNames.length > 0
-                  ? 'opacity-40 hover:opacity-70'
-                  : 'hover:brightness-110'
+                : 'hover:brightness-110'
             }`}
             style={{ backgroundColor: typeColor(tp.name) }}
           >

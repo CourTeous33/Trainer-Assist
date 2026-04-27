@@ -11,6 +11,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'nav.types': 'Types',
     'nav.moves': 'Moves',
     'nav.team': 'Team',
+    'nav.quiz': 'Quiz',
 
     // Home
     'home.pokemon.title': 'Pokemon',
@@ -21,6 +22,27 @@ export const translations: Record<Locale, Record<string, string>> = {
     'home.moves.desc': 'Search and filter moves',
     'home.team.title': 'Team Builder',
     'home.team.desc': 'Build and analyze teams',
+    'home.quiz.title': 'Type Quiz',
+    'home.quiz.desc': 'Drill type matchups',
+
+    // Quiz page
+    'quiz.title': 'Type Quiz',
+    'quiz.subtitle': 'A random matchup. Pick every super-effective (≥2x) type.',
+    'quiz.tagDefensive': 'Defensive',
+    'quiz.tagOffensive': 'Offensive',
+    'quiz.directionDefensive': 'Which types deal super-effective damage to {types}?',
+    'quiz.directionOffensive': 'Which types take super-effective damage from {types}?',
+    'quiz.check': 'Check answer',
+    'quiz.next': 'Next question',
+    'quiz.score': 'Score: {correct} / {total}',
+    'quiz.feedbackPerfect': 'Perfect!',
+    'quiz.feedbackPartial': 'Not quite.',
+    'quiz.feedbackCorrectAnswer': 'Correct answer',
+    'quiz.feedbackMissed': 'You missed',
+    'quiz.feedbackExtra': 'Not super-effective',
+    'quiz.noSuperEffective': 'No types are super-effective here.',
+    'quiz.breakdownDefensive': 'Each type weak to:',
+    'quiz.breakdownOffensive': 'Each type super-effective vs:',
 
     // Pokemon page
     'pokemon.title': 'Pokemon',
@@ -123,6 +145,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'nav.types': '\u30BF\u30A4\u30D7',
     'nav.moves': '\u308F\u3056',
     'nav.team': '\u30C1\u30FC\u30E0',
+    'nav.quiz': '\u30AF\u30A4\u30BA',
 
     'home.pokemon.title': '\u30DD\u30B1\u30E2\u30F3',
     'home.pokemon.desc': '\u30DD\u30B1\u30E2\u30F3\u3092\u691C\u7D22\u30FB\u95B2\u89A7',
@@ -132,6 +155,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'home.moves.desc': '\u308F\u3056\u3092\u691C\u7D22\u30FB\u30D5\u30A3\u30EB\u30BF\u30FC',
     'home.team.title': '\u30C1\u30FC\u30E0\u30D3\u30EB\u30C0\u30FC',
     'home.team.desc': '\u30C1\u30FC\u30E0\u3092\u69CB\u7BC9\u30FB\u5206\u6790',
+    'home.quiz.title': '\u30BF\u30A4\u30D7\u30AF\u30A4\u30BA',
+    'home.quiz.desc': '\u30BF\u30A4\u30D7\u76F8\u6027\u3092\u30C9\u30EA\u30EB',
 
     'pokemon.title': '\u30DD\u30B1\u30E2\u30F3',
     'pokemon.search': '\u30DD\u30B1\u30E2\u30F3\u3092\u691C\u7D22...',
@@ -183,6 +208,25 @@ export const translations: Record<Locale, Record<string, string>> = {
     'types.pokemonWith': '{types}\u30BF\u30A4\u30D7\u306E\u30DD\u30B1\u30E2\u30F3',
     'types.noPokemon': '\u3053\u306E\u30BF\u30A4\u30D7\u306E\u7D44\u307F\u5408\u308F\u305B\u306E\u30DD\u30B1\u30E2\u30F3\u306F\u898B\u3064\u304B\u308A\u307E\u305B\u3093\u3067\u3057\u305F\u3002',
 
+
+    'quiz.title': '\u30BF\u30A4\u30D7\u30AF\u30A4\u30BA',
+    'quiz.subtitle': '\u30E9\u30F3\u30C0\u30E0\u306A\u7D44\u307F\u5408\u308F\u305B\u3002\u52B9\u679C\u629C\u7FA4\uFF082\u500D\u4EE5\u4E0A\uFF09\u306E\u30BF\u30A4\u30D7\u3092\u3059\u3079\u3066\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+    'quiz.tagDefensive': '\u9632\u5FA1',
+    'quiz.tagOffensive': '\u653B\u6483',
+    'quiz.directionDefensive': '{types}\u306B\u52B9\u679C\u629C\u7FA4\u3068\u306A\u308B\u30BF\u30A4\u30D7\u306F\uFF1F',
+    'quiz.directionOffensive': '{types}\u304C\u52B9\u679C\u629C\u7FA4\u3067\u653B\u6483\u3067\u304D\u308B\u30BF\u30A4\u30D7\u306F\uFF1F',
+    'quiz.check': '\u7B54\u3048\u5408\u308F\u305B',
+    'quiz.next': '\u6B21\u306E\u554F\u984C',
+    'quiz.score': '\u30B9\u30B3\u30A2: {correct} / {total}',
+    'quiz.feedbackPerfect': '\u6B63\u89E3\uFF01',
+    'quiz.feedbackPartial': '\u60DC\u3057\u3044\u3002',
+    'quiz.feedbackCorrectAnswer': '\u6B63\u89E3',
+    'quiz.feedbackMissed': '\u898B\u9003\u3057',
+    'quiz.feedbackExtra': '\u52B9\u679C\u629C\u7FA4\u3067\u306F\u306A\u3044',
+    'quiz.noSuperEffective': '\u3053\u306E\u30DE\u30C3\u30C1\u30A2\u30C3\u30D7\u306B\u52B9\u679C\u629C\u7FA4\u306E\u30BF\u30A4\u30D7\u306F\u3042\u308A\u307E\u305B\u3093\u3002',
+    'quiz.breakdownDefensive': '\u5404\u30BF\u30A4\u30D7\u306E\u5F31\u70B9\uFF1A',
+    'quiz.breakdownOffensive': '\u5404\u30BF\u30A4\u30D7\u304C\u52B9\u679C\u629C\u7FA4\u306B\u306A\u308B\u76F8\u624B\uFF1A',
+
     'moves.title': '\u308F\u3056',
     'moves.search': '\u308F\u3056\u3092\u691C\u7D22...',
     'moves.allTypes': '\u3059\u3079\u3066\u306E\u30BF\u30A4\u30D7',
@@ -226,6 +270,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'nav.types': '\u5C5E\u6027',
     'nav.moves': '\u62DB\u5F0F',
     'nav.team': '\u961F\u4F0D',
+    'nav.quiz': '\u6D4B\u9A8C',
 
     'home.pokemon.title': '\u5B9D\u53EF\u68A6',
     'home.pokemon.desc': '\u6D4F\u89C8\u548C\u641C\u7D22\u6240\u6709\u5B9D\u53EF\u68A6',
@@ -235,6 +280,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'home.moves.desc': '\u641C\u7D22\u548C\u7B5B\u9009\u62DB\u5F0F',
     'home.team.title': '\u961F\u4F0D\u6784\u5EFA',
     'home.team.desc': '\u6784\u5EFA\u548C\u5206\u6790\u961F\u4F0D',
+    'home.quiz.title': '\u5C5E\u6027\u6D4B\u9A8C',
+    'home.quiz.desc': '\u9A6C\u4E0A\u719F\u6089\u5C5E\u6027\u514B\u5236',
 
     'pokemon.title': '\u5B9D\u53EF\u68A6',
     'pokemon.search': '\u641C\u7D22\u5B9D\u53EF\u68A6...',
@@ -285,6 +332,25 @@ export const translations: Record<Locale, Record<string, string>> = {
     'types.offDualResists': '被抵抗',
     'types.pokemonWith': '{types}\u5C5E\u6027\u7684\u5B9D\u53EF\u68A6',
     'types.noPokemon': '\u672A\u627E\u5230\u6B64\u5C5E\u6027\u7EC4\u5408\u7684\u5B9D\u53EF\u68A6\u3002',
+
+
+    'quiz.title': '\u5C5E\u6027\u6D4B\u9A8C',
+    'quiz.subtitle': '\u968F\u673A\u7EC4\u5408\u3002\u9009\u51FA\u6240\u6709\u6548\u679C\u62D4\u7FA4\uFF08\u22652\u500D\uFF09\u7684\u5C5E\u6027\u3002',
+    'quiz.tagDefensive': '\u9632\u5FA1',
+    'quiz.tagOffensive': '\u653B\u51FB',
+    'quiz.directionDefensive': '\u54EA\u4E9B\u5C5E\u6027\u5BF9{types}\u6548\u679C\u62D4\u7FA4\uFF1F',
+    'quiz.directionOffensive': '{types}\u5BF9\u54EA\u4E9B\u5C5E\u6027\u6548\u679C\u62D4\u7FA4\uFF1F',
+    'quiz.check': '\u63D0\u4EA4',
+    'quiz.next': '\u4E0B\u4E00\u9898',
+    'quiz.score': '\u5F97\u5206: {correct} / {total}',
+    'quiz.feedbackPerfect': '\u5168\u5BF9\uFF01',
+    'quiz.feedbackPartial': '\u8FD8\u4E0D\u591F\u3002',
+    'quiz.feedbackCorrectAnswer': '\u6B63\u786E\u7B54\u6848',
+    'quiz.feedbackMissed': '\u9057\u6F0F',
+    'quiz.feedbackExtra': '\u5E76\u975E\u6548\u679C\u62D4\u7FA4',
+    'quiz.noSuperEffective': '\u8FD9\u4E2A\u7EC4\u5408\u6CA1\u6709\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\u3002',
+    'quiz.breakdownDefensive': '\u6BCF\u4E2A\u5C5E\u6027\u88AB\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\uFF1A',
+    'quiz.breakdownOffensive': '\u6BCF\u4E2A\u5C5E\u6027\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\uFF1A',
 
     'moves.title': '\u62DB\u5F0F',
     'moves.search': '\u641C\u7D22\u62DB\u5F0F...',

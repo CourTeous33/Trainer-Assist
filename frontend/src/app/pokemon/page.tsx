@@ -35,15 +35,10 @@ export default function PokemonPage() {
       .catch(() => {});
   }, []);
 
-  // Reset offset when filters change
-  useEffect(() => {
-    setOffset(0);
-  }, [search, typeFilters, generation]);
-
   // Fetch pokemon list
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
     setError('');
 
     getPokemonList({
@@ -90,7 +85,7 @@ export default function PokemonPage() {
       {/* Search */}
       <SearchInput
         value={search}
-        onChange={setSearch}
+        onChange={(v) => { setSearch(v); setOffset(0); }}
         placeholder={t('pokemon.search')}
         className="mb-4"
       />
@@ -105,9 +100,10 @@ export default function PokemonPage() {
             if (prev.length >= 2) return [prev[1], tp.name];
             return [...prev, tp.name];
           });
+          setOffset(0);
         }}
         allLabel={t('pokemon.allTypes')}
-        onClearAll={() => setTypeFilters([])}
+        onClearAll={() => { setTypeFilters([]); setOffset(0); }}
         className="mb-4"
       />
 
@@ -115,9 +111,10 @@ export default function PokemonPage() {
       <div className="mb-6">
         <select
           value={generation ?? ''}
-          onChange={(e) =>
-            setGeneration(e.target.value ? Number(e.target.value) : undefined)
-          }
+          onChange={(e) => {
+            setGeneration(e.target.value ? Number(e.target.value) : undefined);
+            setOffset(0);
+          }}
           className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
         >
           <option value="">{t('pokemon.allGenerations')}</option>

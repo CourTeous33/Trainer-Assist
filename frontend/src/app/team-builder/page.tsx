@@ -19,7 +19,9 @@ import { useDebounce } from '@/hooks/use-debounce';
 
 export default function TeamBuilderPage() {
   const { t, locale } = useLocale();
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<Team[]>(() =>
+    typeof window === 'undefined' ? [] : getTeams(),
+  );
   const [types, setTypes] = useState<TypeRef[]>([]);
   const [efficacy, setEfficacy] = useState<TypeEfficacy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,6 @@ export default function TeamBuilderPage() {
   };
 
   useEffect(() => {
-    setTeams(getTeams());
     Promise.all([getTypes(), getTypeEfficacy()])
       .then(([tp, e]) => {
         setTypes(tp);
@@ -54,16 +55,18 @@ export default function TeamBuilderPage() {
   // Search pokemon for picker
   useEffect(() => {
     if (!pickerOpen || !debouncedPickerSearch.trim()) {
-      setPickerResults([]);
       return;
     }
 
-    setPickerLoading(true);
+    setPickerLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
     getPokemonList({ search: debouncedPickerSearch, limit: 10 })
       .then((res) => setPickerResults(res.items))
       .catch(() => setPickerResults([]))
       .finally(() => setPickerLoading(false));
   }, [debouncedPickerSearch, pickerOpen]);
+
+  // Hide stale results when the search is empty so deleting back to "" doesn't keep showing prior matches.
+  const visiblePickerResults = debouncedPickerSearch.trim() ? pickerResults : [];
 
   const handleCreateTeam = () => {
     const team = createTeam(`Team ${teams.length + 1}`);
@@ -357,7 +360,7 @@ export default function TeamBuilderPage() {
                 <div className="flex justify-center py-6">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
                 </div>
-              ) : pickerResults.length === 0 ? (
+              ) : visiblePickerResults.length === 0 ? (
                 <p className="py-6 text-center text-sm text-gray-400">
                   {pickerSearch
                     ? t('team.noPokemonFound')
@@ -365,7 +368,7 @@ export default function TeamBuilderPage() {
                 </p>
               ) : (
                 <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {pickerResults.map((p) => (
+                  {visiblePickerResults.map((p) => (
                     <li key={p.id}>
                       <button
                         onClick={() => handleSelectPokemon(p)}
