@@ -203,8 +203,12 @@ export default function QuizPage() {
               typeNamesMap={typeNamesMap}
               label={tr(
                 question.direction === 'defensive'
-                  ? 'quiz.breakdownDefensive'
-                  : 'quiz.breakdownOffensive',
+                  ? isResisted
+                    ? 'quiz.breakdownDefensiveResisted'
+                    : 'quiz.breakdownDefensive'
+                  : isResisted
+                    ? 'quiz.breakdownOffensiveResisted'
+                    : 'quiz.breakdownOffensive',
               )}
               highlightIds={missedIds}
             />
@@ -294,8 +298,17 @@ function BreakdownSection({
         const part = slot.breakdown?.find((p) => p.subject.id === subject.id);
         return part ? { type: slot.type, multiplier: part.multiplier } : null;
       })
-      .filter((m): m is { type: TypeRef; multiplier: number } => m !== null && m.multiplier >= 2)
-      .sort((a, b) => b.multiplier - a.multiplier);
+      .filter((m): m is { type: TypeRef; multiplier: number } => {
+        if (m === null) return false;
+        return question.polarity === 'super_effective'
+          ? m.multiplier >= 2
+          : m.multiplier <= 0.5;
+      })
+      .sort((a, b) =>
+        question.polarity === 'super_effective'
+          ? b.multiplier - a.multiplier
+          : a.multiplier - b.multiplier,
+      );
     return { subject, matchups };
   });
 
