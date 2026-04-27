@@ -27,7 +27,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
     // Quiz page
     'quiz.title': 'Type Quiz',
-    'quiz.subtitle': 'A random matchup. Pick every super-effective (≥2x) type.',
+    'quiz.subtitle': 'A random matchup. Read the prompt and pick every type that fits.',
     'quiz.tagDefensive': 'Defensive',
     'quiz.tagOffensive': 'Offensive',
     'quiz.directionDefensive': 'Which types deal super-effective damage to {types}?',
@@ -43,6 +43,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.noSuperEffective': 'No types are super-effective here.',
     'quiz.breakdownDefensive': 'Each type weak to:',
     'quiz.breakdownOffensive': 'Each type super-effective vs:',
+    'quiz.tagSuperEffective': 'Super-effective',
+    'quiz.tagResisted': 'Resisted',
+    'quiz.directionDefensiveResisted': 'Which types deal not-very-effective damage to {types}?',
+    'quiz.directionOffensiveResisted': 'Which types take not-very-effective damage from {types}?',
+    'quiz.noResisted': 'No types resist this matchup.',
+    'quiz.feedbackExtraResisted': 'Not resisted',
+    'quiz.breakdownDefensiveResisted': 'Each type resists:',
+    'quiz.breakdownOffensiveResisted': 'Each type resisted by:',
 
     // Pokemon page
     'pokemon.title': 'Pokemon',
@@ -210,7 +218,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 
     'quiz.title': '\u30BF\u30A4\u30D7\u30AF\u30A4\u30BA',
-    'quiz.subtitle': '\u30E9\u30F3\u30C0\u30E0\u306A\u7D44\u307F\u5408\u308F\u305B\u3002\u52B9\u679C\u629C\u7FA4\uFF082\u500D\u4EE5\u4E0A\uFF09\u306E\u30BF\u30A4\u30D7\u3092\u3059\u3079\u3066\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+    'quiz.subtitle': 'ランダムなマッチアップ。問題を読んで該当するタイプをすべて選んでください。',
     'quiz.tagDefensive': '\u9632\u5FA1',
     'quiz.tagOffensive': '\u653B\u6483',
     'quiz.directionDefensive': '{types}\u306B\u52B9\u679C\u629C\u7FA4\u3068\u306A\u308B\u30BF\u30A4\u30D7\u306F\uFF1F',
@@ -226,6 +234,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.noSuperEffective': '\u3053\u306E\u30DE\u30C3\u30C1\u30A2\u30C3\u30D7\u306B\u52B9\u679C\u629C\u7FA4\u306E\u30BF\u30A4\u30D7\u306F\u3042\u308A\u307E\u305B\u3093\u3002',
     'quiz.breakdownDefensive': '\u5404\u30BF\u30A4\u30D7\u306E\u5F31\u70B9\uFF1A',
     'quiz.breakdownOffensive': '\u5404\u30BF\u30A4\u30D7\u304C\u52B9\u679C\u629C\u7FA4\u306B\u306A\u308B\u76F8\u624B\uFF1A',
+    'quiz.tagSuperEffective': '効果抜群',
+    'quiz.tagResisted': 'いまひとつ',
+    'quiz.directionDefensiveResisted': '{types}に効果がいまひとつとなるタイプは？',
+    'quiz.directionOffensiveResisted': '{types}が効果がいまひとつで攻撃するタイプは？',
+    'quiz.noResisted': 'このマッチアップに耐性タイプはありません。',
+    'quiz.feedbackExtraResisted': '耐性ではない',
+    'quiz.breakdownDefensiveResisted': '各タイプが耐えるタイプ：',
+    'quiz.breakdownOffensiveResisted': '各タイプが耐えられる相手：',
 
     'moves.title': '\u308F\u3056',
     'moves.search': '\u308F\u3056\u3092\u691C\u7D22...',
@@ -335,7 +351,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 
     'quiz.title': '\u5C5E\u6027\u6D4B\u9A8C',
-    'quiz.subtitle': '\u968F\u673A\u7EC4\u5408\u3002\u9009\u51FA\u6240\u6709\u6548\u679C\u62D4\u7FA4\uFF08\u22652\u500D\uFF09\u7684\u5C5E\u6027\u3002',
+    'quiz.subtitle': '随机组合。请阅读题目并选出所有符合的属性。',
     'quiz.tagDefensive': '\u9632\u5FA1',
     'quiz.tagOffensive': '\u653B\u51FB',
     'quiz.directionDefensive': '\u54EA\u4E9B\u5C5E\u6027\u5BF9{types}\u6548\u679C\u62D4\u7FA4\uFF1F',
@@ -351,6 +367,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.noSuperEffective': '\u8FD9\u4E2A\u7EC4\u5408\u6CA1\u6709\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\u3002',
     'quiz.breakdownDefensive': '\u6BCF\u4E2A\u5C5E\u6027\u88AB\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\uFF1A',
     'quiz.breakdownOffensive': '\u6BCF\u4E2A\u5C5E\u6027\u6548\u679C\u62D4\u7FA4\u7684\u5C5E\u6027\uFF1A',
+    'quiz.tagSuperEffective': '效果拔群',
+    'quiz.tagResisted': '抵抗',
+    'quiz.directionDefensiveResisted': '哪些属性对{types}效果不佳？',
+    'quiz.directionOffensiveResisted': '{types}对哪些属性效果不佳？',
+    'quiz.noResisted': '没有属性能抵抗这个组合。',
+    'quiz.feedbackExtraResisted': '并非抵抗',
+    'quiz.breakdownDefensiveResisted': '每个属性抵抗：',
+    'quiz.breakdownOffensiveResisted': '每个属性被以下属性抵抗：',
 
     'moves.title': '\u62DB\u5F0F',
     'moves.search': '\u641C\u7D22\u62DB\u5F0F...',
