@@ -122,6 +122,8 @@ export default function QuizPage() {
             {question.direction === 'defensive'
               ? tr('quiz.tagDefensive')
               : tr('quiz.tagOffensive')}
+            {' · '}
+            {isResisted ? tr('quiz.tagResisted') : tr('quiz.tagSuperEffective')}
           </span>
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {tr('quiz.score', { correct: String(score.correct), total: String(score.total) })}
