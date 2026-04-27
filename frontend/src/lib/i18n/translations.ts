@@ -51,6 +51,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.feedbackExtraResisted': 'Not resisted',
     'quiz.breakdownDefensiveResisted': 'Each type resists:',
     'quiz.breakdownOffensiveResisted': 'Each type resisted by:',
+    'quiz.breakdownNeutralizes': 'neutralizes:',
+    'quiz.breakdownDoesntHelp': 'doesn\'t help:',
 
     // Pokemon page
     'pokemon.title': 'Pokemon',
@@ -242,6 +244,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.feedbackExtraResisted': '耐性ではない',
     'quiz.breakdownDefensiveResisted': '各タイプが耐えるタイプ：',
     'quiz.breakdownOffensiveResisted': '各タイプが耐えられる相手：',
+    'quiz.breakdownNeutralizes': '相殺：',
+    'quiz.breakdownDoesntHelp': '効かず：',
 
     'moves.title': '\u308F\u3056',
     'moves.search': '\u308F\u3056\u3092\u691C\u7D22...',
@@ -375,6 +379,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'quiz.feedbackExtraResisted': '并非抵抗',
     'quiz.breakdownDefensiveResisted': '每个属性抵抗：',
     'quiz.breakdownOffensiveResisted': '每个属性被以下属性抵抗：',
+    'quiz.breakdownNeutralizes': '抵消：',
+    'quiz.breakdownDoesntHelp': '没帮助：',
 
     'moves.title': '\u62DB\u5F0F',
     'moves.search': '\u641C\u7D22\u62DB\u5F0F...',
