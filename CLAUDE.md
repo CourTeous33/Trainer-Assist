@@ -10,12 +10,78 @@
 
 Pokemon toolbox web app. Rust/Axum backend + Next.js frontend. Data sourced from PokeAPI CSVs, stored in Redis as denormalized JSON. Teams stored in browser localStorage. No auth.
 
+## Tech Stack
+
+- **Backend**: Rust (Axum 0.8) REST API, Redis-backed
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS v4, Vitest
+- **Data Pipeline**: Rust binary that fetches PokeAPI CSVs, transforms, and loads into Redis
+- **Infrastructure**: Docker Compose (Postgres 16, Redis 7, API, Frontend, Seed)
+
 ## Architecture
 
 - **Monorepo**: `backend/` (Cargo workspace) + `frontend/` (Next.js)
 - **Backend crates**: `api` (Axum server), `seed` (data pipeline), `shared` (models + Redis keys)
 - **Frontend**: Next.js 16 App Router, Tailwind CSS v4, Vitest for tests
 - **Infra**: Docker Compose — Postgres 16 (:5433), Redis 7 (:6380), API (:3001), Frontend (:3000)
+
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│  Next.js Frontend   │────▶│  Rust/Axum API      │
+│  :3000              │     │  :3001              │
+└─────────────────────┘     └──────┬────────┬─────┘
+                                   │        │
+                            ┌──────▼──┐  ┌──▼───────┐
+                            │  Redis  │  │ Postgres │
+                            │  :6380  │  │  :5433   │
+                            └─────────┘  └──────────┘
+```
+
+- **Redis** stores all Pokemon data as denormalized JSON (summaries, details, types, moves, efficacy matrix)
+- **Postgres** is provisioned for future user data (teams, auth)
+- **Seed binary** fetches 16 CSV files from PokeAPI GitHub, parses, transforms, and loads into Redis
+
+### Environment
+
+Copy `.env.example` to `.env` in `backend/`:
+
+```
+REDIS_URL=redis://127.0.0.1:6380
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5433/trainer_assist
+HOST=0.0.0.0
+PORT=3001
+CORS_ORIGIN=http://localhost:3000
+```
+
+### Port Mapping
+
+| Service | Host Port | Container Port |
+|---------|-----------|----------------|
+| Frontend | 3000 | 3000 |
+| API | 3001 | 3001 |
+| Redis | 6380 | 6379 |
+| Postgres | 5433 | 5432 |
+
+Ports are offset to avoid conflicts with local services.
+
+### Project Layout
+
+```
+trainer-assist/
+├── backend/
+│   ├── Cargo.toml                  # Workspace root
+│   └── crates/
+│       ├── api/src/                # Axum REST API: main, config, error, state, routes/
+│       ├── seed/src/               # Pipeline: fetch → parse → transform → load
+│       └── shared/src/             # models.rs, redis_keys.rs
+├── frontend/src/
+│   ├── app/                        # App Router: pokemon/, types/, moves/, team-builder/
+│   ├── components/                 # TypeBadge, PokemonCard, StatBar, etc.
+│   ├── hooks/                      # useDebounce, useTeam
+│   └── lib/                        # api, types, team-store, format, i18n/, theme/
+├── docker-compose.yml
+├── Makefile
+└── .env.example
+```
 
 ## Key Commands
 
@@ -24,18 +90,20 @@ Pokemon toolbox web app. Rust/Axum backend + Next.js frontend. Data sourced from
 make up              # Start all services
 make seed            # Seed Redis with Pokemon data
 make down            # Stop everything
+make logs            # Follow Docker logs
 
 # Local dev
-make infra-up        # Start Postgres + Redis
+make infra-up        # Start Postgres + Redis only
 make seed-local      # Seed locally
-make dev-api         # Run API
-make dev-frontend    # Run frontend
+make dev-api         # Run API locally
+make dev-frontend    # Run frontend locally
+make dev             # Run API + frontend locally
 
-# Testing
+# Testing & linting
 cd backend && cargo test          # 52 backend tests
 cd frontend && npm test           # 63 frontend tests
-
-# Linting
+make clippy                       # Rust linter
+make test                         # Backend tests
 cd backend && cargo clippy
 cd frontend && npm run lint
 ```
@@ -63,6 +131,17 @@ GET /api/v1/types/:id/pokemon
 GET /api/v1/moves            ?search&type_id&damage_class
 GET /api/v1/health
 ```
+
+### Redis Data Layout
+
+| Key | Content |
+|-----|---------|
+| `pokemon:list` | All `PokemonSummary[]` (id, name, names, types, sprite_url, nicknames) |
+| `pokemon:{id}` | Full `PokemonDetail` (stats, abilities, moves, height, weight, generation) |
+| `type:list` | All `TypeRef[]` (18 standard types, no Stellar/???/Shadow) |
+| `type:efficacy` | All `TypeEfficacy[]` (attacking_type_id, defending_type_id, damage_factor) |
+| `type:{id}:pokemon` | `PokemonSummary[]` for that type |
+| `move:list` | All `MoveSummary[]` (name, type, power, accuracy, pp, damage_class) |
 
 ### Data Pipeline Notes
 
