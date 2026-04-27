@@ -20,10 +20,10 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
-import { useLocale, localizedName } from '@/lib/i18n';
+import { useLocale } from '@/lib/i18n';
 
 export default function QuizPage() {
-  const { t: tr, locale } = useLocale();
+  const { t: tr } = useLocale();
   const [types, setTypes] = useState<TypeRef[]>([]);
   const lookupRef = useRef<EfficacyLookup | null>(null);
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
@@ -88,14 +88,12 @@ export default function QuizPage() {
 
   const missedIds = result ? new Set(result.missed.map((m) => m.type.id)) : undefined;
 
-  const subjectLabel = question.subject
-    .map((s) => localizedName(s.names, locale) || s.name)
-    .join(' / ');
-
   const promptKey =
     question.direction === 'defensive'
       ? 'quiz.directionDefensive'
       : 'quiz.directionOffensive';
+
+  const [promptBefore, promptAfter] = tr(promptKey).split('{types}');
 
   return (
     <div className="py-6">
@@ -125,18 +123,16 @@ export default function QuizPage() {
           </span>
         </div>
 
-        <p className="mb-4 text-base text-gray-700 dark:text-gray-200">
-          {tr(promptKey, { types: subjectLabel })}
-        </p>
-
-        <div className="flex flex-wrap items-center gap-2">
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-base text-gray-700 dark:text-gray-200">
+          {promptBefore && <span>{promptBefore}</span>}
           {question.subject.map((s, i) => (
-            <span key={s.id} className="flex items-center gap-2">
-              {i > 0 && <span className="text-lg text-gray-400">/</span>}
+            <span key={s.id} className="inline-flex items-center gap-1.5">
+              {i > 0 && <span className="text-gray-400">/</span>}
               <TypeBadge name={s.name} names={s.names} size="lg" />
             </span>
           ))}
-        </div>
+          {promptAfter && <span>{promptAfter}</span>}
+        </p>
       </div>
 
       {/* Answer keypad */}
