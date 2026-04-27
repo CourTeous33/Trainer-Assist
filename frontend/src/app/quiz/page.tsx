@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getTypes, getTypeEfficacy } from '@/lib/api';
 import type { TypeRef, LocalizedNames } from '@/lib/types';
 import {
+  buildBreakdownRows,
   buildEfficacyLookup,
   checkAnswer,
   computeAnswer,
   pickQuestion,
   type AnswerCheck,
   type AnswerSlot,
+  type AttackerEntry,
   type EfficacyLookup,
   type QuizAnswer,
   type QuizQuestion,
@@ -292,51 +294,77 @@ function BreakdownSection({
   label: string;
   highlightIds?: Set<number>;
 }) {
-  const rows = question.subject.map((subject) => {
-    const matchups = answer.all
-      .map((slot) => {
-        const part = slot.breakdown?.find((p) => p.subject.id === subject.id);
-        return part ? { type: slot.type, multiplier: part.multiplier } : null;
-      })
-      .filter((m): m is { type: TypeRef; multiplier: number } => {
-        if (m === null) return false;
-        return question.polarity === 'super_effective'
-          ? m.multiplier >= 2
-          : m.multiplier <= 0.5;
-      })
-      .sort((a, b) =>
-        question.polarity === 'super_effective'
-          ? b.multiplier - a.multiplier
-          : a.multiplier - b.multiplier,
-      );
-    return { subject, matchups };
-  });
+  const { t: tr } = useLocale();
+  const rows = buildBreakdownRows(question, answer);
+  const neutralizerLabel = tr(
+    question.polarity === 'super_effective'
+      ? 'quiz.breakdownNeutralizes'
+      : 'quiz.breakdownDoesntHelp',
+  );
 
   return (
     <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
       <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
       <div className="space-y-2">
-        {rows.map(({ subject, matchups }) => (
+        {rows.map(({ subject, primary, neutralizers }) => (
           <div key={subject.id} className="flex flex-wrap items-center gap-2">
             <TypeBadge name={subject.name} names={subject.names} size="md" />
             <span className="text-xs text-gray-400">→</span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {matchups.map((m) => (
-                <span key={m.type.id} className="inline-flex items-center gap-1">
-                  <TypeBadge
-                    name={m.type.name}
-                    names={typeNamesMap.get(m.type.name)}
-                    className={highlightIds?.has(m.type.id) ? MISSED_HIGHLIGHT : ''}
-                  />
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    {formatMultiplier(m.multiplier)}
-                  </span>
+            <BreakdownEntries
+              entries={primary}
+              typeNamesMap={typeNamesMap}
+              highlightIds={highlightIds}
+              muted={false}
+            />
+            {neutralizers.length > 0 && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600" aria-hidden="true">│</span>
+                <span className="text-xs italic text-gray-500 dark:text-gray-400">
+                  {neutralizerLabel}
                 </span>
-              ))}
-            </div>
+                <BreakdownEntries
+                  entries={neutralizers}
+                  typeNamesMap={typeNamesMap}
+                  highlightIds={highlightIds}
+                  muted={true}
+                />
+              </>
+            )}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function BreakdownEntries({
+  entries,
+  typeNamesMap,
+  highlightIds,
+  muted,
+}: {
+  entries: AttackerEntry[];
+  typeNamesMap: Map<string, LocalizedNames>;
+  highlightIds?: Set<number>;
+  muted: boolean;
+}) {
+  const multClass = muted
+    ? 'text-gray-400 dark:text-gray-500'
+    : 'text-gray-500 dark:text-gray-400';
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {entries.map((m) => (
+        <span key={m.type.id} className="inline-flex items-center gap-1">
+          <TypeBadge
+            name={m.type.name}
+            names={typeNamesMap.get(m.type.name)}
+            className={highlightIds?.has(m.type.id) ? MISSED_HIGHLIGHT : ''}
+          />
+          <span className={`text-xs font-semibold ${multClass}`}>
+            {formatMultiplier(m.multiplier)}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }
