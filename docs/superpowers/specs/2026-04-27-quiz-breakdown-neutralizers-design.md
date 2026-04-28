@@ -101,8 +101,10 @@ Two new keys per locale:
 
 | Key | English | Japanese | Chinese |
 |---|---|---|---|
-| `quiz.breakdownNeutralizes` | `neutralizes:` | `無効化：` | `抵消：` |
-| `quiz.breakdownDoesntHelp` | `doesn't help:` | `効かず：` | `无效：` |
+| `quiz.breakdownNeutralizes` | `neutralizes:` | `相殺：` | `抵消：` |
+| `quiz.breakdownDoesntHelp` | `doesn't help:` | `効かず：` | `没帮助：` |
+
+(Japanese `相殺` and Chinese `没帮助` were chosen during code-quality review over the originally drafted `無効化` and `无效`. `無効化` reads stiff next to the casual surrounding keys; `相殺` mirrors the Chinese `抵消` semantically. `无效` carries an in-game 0×-immunity connotation in Chinese Pokemon localizations; `没帮助` more precisely conveys "doesn't help" without that overload.)
 
 Inserted in each locale block immediately after the existing `quiz.breakdownOffensiveResisted` key.
 
