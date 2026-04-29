@@ -63,6 +63,23 @@ const FEATURES = [
       </svg>
     ),
   },
+  {
+    href: '/calc',
+    titleKey: 'home.calc.title',
+    descKey: 'home.calc.desc',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-10 w-10">
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <line x1="8" y1="7" x2="16" y2="7" />
+        <line x1="8" y1="12" x2="8.01" y2="12" />
+        <line x1="12" y1="12" x2="12.01" y2="12" />
+        <line x1="16" y1="12" x2="16.01" y2="12" />
+        <line x1="8" y1="16" x2="8.01" y2="16" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+        <line x1="16" y1="16" x2="16.01" y2="16" />
+      </svg>
+    ),
+  },
 ];
 
 export default function HomePage() {
