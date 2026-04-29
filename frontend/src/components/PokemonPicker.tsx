@@ -17,23 +17,22 @@ export default function PokemonPicker({ allTypes, onSelect }: Props) {
   const { locale, t } = useLocale();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  const [results, setResults] = useState<PokemonSummary[]>([]);
+  const [fetched, setFetched] = useState<PokemonSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  const active = !!(debouncedSearch || typeFilter);
+  const results = active ? fetched : [];
 
   useEffect(() => {
-    if (!debouncedSearch && !typeFilter) {
-      setResults([]);
-      return;
-    }
+    if (!active) return;
     let cancelled = false;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
     getPokemonList({ search: debouncedSearch || undefined, type: typeFilter ?? undefined, limit: 20 })
-      .then((res) => { if (!cancelled) setResults(res.items); })
-      .catch(() => { if (!cancelled) setResults([]); })
+      .then((res) => { if (!cancelled) setFetched(res.items); })
+      .catch(() => { if (!cancelled) setFetched([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [debouncedSearch, typeFilter]);
+  }, [active, debouncedSearch, typeFilter]);
 
   return (
     <div className="space-y-2">
