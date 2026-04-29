@@ -23,8 +23,8 @@ export interface AttackerState extends DefenderState {
   moveIds: [number | null, number | null, number | null, number | null];
 }
 
-const DEFAULT_ATTACKER_ID = 445;
-const DEFAULT_DEFENDER_ID = 242;
+const DEFAULT_ATTACKER_ID = 94;
+const DEFAULT_DEFENDER_ID = 727;
 
 export function defaultCalcState(): CalcState {
   const zero: Stats = { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 };

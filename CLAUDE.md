@@ -149,7 +149,7 @@ GET /api/v1/health
 - **Type filtering**: Excludes type IDs 19 (Stellar), 10001 (???), 10002 (Shadow)
 - **Localization**: Language IDs — 9=English, 1=Japanese (ja-Hrkt), 12=Chinese Simplified
 - **Ability descriptions**: Uses `ability_flavor_text.csv`, picks highest `version_group_id` per language
-- **Moves**: Only level-up moves (`pokemon_move_method_id=1`), deduplicated across version groups
+- **Moves**: Level-up, egg, tutor, and machine moves (`pokemon_move_method_id` in `{1,2,3,4}`), deduplicated across version groups
 - **CSV source**: `raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/`
 - **Sprites**: `raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png`
 - **Pinyin**: Pre-computed via Rust `pinyin` crate during transform, stored as `zh_pinyin` on `LocalizedNames` (e.g. "pikaqiu pkq")

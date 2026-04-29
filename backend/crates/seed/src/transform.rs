@@ -247,10 +247,12 @@ pub fn transform(data: &ParsedData) -> TransformedData {
         .map(|n| (n.move_id, n.name.clone()))
         .collect();
 
-    // pokemon_id -> Set<move_id> (level-up moves, method_id=1, deduplicated across versions)
+    // Match the move set damage calculators expose: any move the Pokemon
+    // can legally learn (level-up, egg, tutor, machine). Methods 5+ are
+    // event-only / mode-specific and excluded.
     let mut pokemon_move_ids: HashMap<i32, HashSet<i32>> = HashMap::new();
     for pm in &data.pokemon_moves {
-        if pm.pokemon_move_method_id == 1 {
+        if matches!(pm.pokemon_move_method_id, 1 | 2 | 3 | 4) {
             pokemon_move_ids
                 .entry(pm.pokemon_id)
                 .or_default()

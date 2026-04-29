@@ -78,17 +78,19 @@ export default function EVStatTable({
               <td>
                 <input
                   type="number" aria-label={`IV ${k}`}
-                  value={ivs[k]} min={0} max={31}
+                  value={ivs[k] === 0 ? '' : ivs[k]} min={0} max={31}
+                  placeholder="0"
                   disabled={ivsLocked}
-                  onChange={(e) => setIV(k, Number(e.target.value) || 0)}
+                  onChange={(e) => setIV(k, e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-14 px-1 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 disabled:opacity-50"
                 />
               </td>
               <td>
                 <input
                   type="number" aria-label={`EV ${k}`}
-                  value={evs[k]} min={0} max={perStat}
-                  onChange={(e) => setEV(k, Number(e.target.value) || 0)}
+                  value={evs[k] === 0 ? '' : evs[k]} min={0} max={perStat}
+                  placeholder="0"
+                  onChange={(e) => setEV(k, e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-16 px-1 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900"
                 />
               </td>

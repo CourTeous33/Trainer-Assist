@@ -31,7 +31,7 @@ vi.mock('@/lib/api', () => ({
 describe('CalcPage smoke', () => {
   it('renders default attacker/defender and shows a damage result after picking a move', async () => {
     render(<LocaleProvider><CalcPage /></LocaleProvider>);
-    await waitFor(() => expect(screen.getAllByText('Mon 445').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText('Mon 94').length).toBeGreaterThan(0));
     await userEvent.click(screen.getAllByText(/tap to add/i)[0]);
     await userEvent.click(screen.getByText('Earthquake'));
     await waitFor(() => {

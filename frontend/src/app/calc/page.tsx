@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { Suspense, useEffect, useMemo, useReducer, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   defaultCalcState, calculate, serializeState, deserializeState,
-  clampEVsForMode, lockedIVsForMode, lockedLevelForMode,
+  clampEVsForMode, convertEVsBetweenModes, lockedIVsForMode, lockedLevelForMode,
   type CalcState, type CalcInput, type EVMode, type NatureId,
 } from '@/lib/calc';
-import type { PokemonDetail, MoveSummary, TypeRef, TypeEfficacy, Stats } from '@/lib/types';
-import { getPokemon, getTypes, getTypeEfficacy, getMoves } from '@/lib/api';
+import type { PokemonDetail, PokemonSummary, MoveSummary, TypeRef, TypeEfficacy, Stats } from '@/lib/types';
+import { getPokemon, getPokemonList, getTypes, getTypeEfficacy, getMoves } from '@/lib/api';
 import { useLocale, localizedName } from '@/lib/i18n';
 import { useDebounce } from '@/hooks/use-debounce';
 import EVModeToggle from '@/components/EVModeToggle';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 import EVStatTable from '@/components/EVStatTable';
 import NatureDropdown from '@/components/NatureDropdown';
 import ItemDropdown from '@/components/ItemDropdown';
@@ -26,7 +28,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Action =
   | { type: 'SET_EV_MODE'; mode: EVMode }
-  | { type: 'SET_ATTACKER_POKEMON'; id: number }
+  | { type: 'SET_ATTACKER_POKEMON'; id: number; preserveMoves?: boolean }
   | { type: 'SET_DEFENDER_POKEMON'; id: number }
   | { type: 'SET_ATTACKER_LEVEL'; level: number }
   | { type: 'SET_DEFENDER_LEVEL'; level: number }
@@ -52,11 +54,16 @@ function calcReducer(state: CalcState, action: Action): CalcState {
       const lockedIvs = lockedIVsForMode(action.mode);
       return {
         ...state, evMode: action.mode,
-        attacker: { ...state.attacker, level: lockedLvl ?? state.attacker.level, ivs: lockedIvs ?? state.attacker.ivs, evs: clampEVsForMode(state.attacker.evs, action.mode) },
-        defender: { ...state.defender, level: lockedLvl ?? state.defender.level, ivs: lockedIvs ?? state.defender.ivs, evs: clampEVsForMode(state.defender.evs, action.mode) },
+        attacker: { ...state.attacker, level: lockedLvl ?? state.attacker.level, ivs: lockedIvs ?? state.attacker.ivs, evs: convertEVsBetweenModes(state.attacker.evs, state.evMode, action.mode) },
+        defender: { ...state.defender, level: lockedLvl ?? state.defender.level, ivs: lockedIvs ?? state.defender.ivs, evs: convertEVsBetweenModes(state.defender.evs, state.evMode, action.mode) },
       };
     }
-    case 'SET_ATTACKER_POKEMON': return { ...state, attacker: { ...state.attacker, pokemonId: action.id, baseStatsOverride: null, typesOverride: null, moveIds: [null, null, null, null] } };
+    case 'SET_ATTACKER_POKEMON': {
+      const moveIds: CalcState['attacker']['moveIds'] = action.preserveMoves
+        ? state.attacker.moveIds
+        : [null, null, null, null];
+      return { ...state, attacker: { ...state.attacker, pokemonId: action.id, baseStatsOverride: null, typesOverride: null, moveIds } };
+    }
     case 'SET_DEFENDER_POKEMON': return { ...state, defender: { ...state.defender, pokemonId: action.id, baseStatsOverride: null, typesOverride: null } };
     case 'SET_ATTACKER_LEVEL':   return { ...state, attacker: { ...state.attacker, level: action.level } };
     case 'SET_DEFENDER_LEVEL':   return { ...state, defender: { ...state.defender, level: action.level } };
@@ -88,6 +95,14 @@ function toEfficacyMatrix(rows: TypeEfficacy[]): number[][] {
 }
 
 export default function CalcPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <CalcPageInner />
+    </Suspense>
+  );
+}
+
+function CalcPageInner() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,6 +111,7 @@ export default function CalcPage() {
   const [allTypes, setAllTypes] = useState<TypeRef[]>([]);
   const [efficacyMatrix, setEfficacyMatrix] = useState<number[][]>([]);
   const [allMoves, setAllMoves] = useState<MoveSummary[]>([]);
+  const [formsBySpecies, setFormsBySpecies] = useState<Map<number, PokemonSummary[]>>(new Map());
   const [attackerDetail, setAttackerDetail] = useState<PokemonDetail | null>(null);
   const [defenderDetail, setDefenderDetail] = useState<PokemonDetail | null>(null);
   const [pickerOpen, setPickerOpen] = useState<null | 'attacker' | 'defender'>(null);
@@ -123,11 +139,18 @@ export default function CalcPage() {
 
   // Static reference data.
   useEffect(() => {
-    Promise.all([getTypes(), getTypeEfficacy(), getMoves({})])
-      .then(([types, efficacy, moves]) => {
+    Promise.all([getTypes(), getTypeEfficacy(), getMoves({}), getPokemonList({ limit: 2000 })])
+      .then(([types, efficacy, moves, pokemonList]) => {
         setAllTypes(types);
         setEfficacyMatrix(toEfficacyMatrix(efficacy));
         setAllMoves(moves);
+        const map = new Map<number, PokemonSummary[]>();
+        for (const p of pokemonList.items) {
+          const arr = map.get(p.species_id) ?? [];
+          arr.push(p);
+          map.set(p.species_id, arr);
+        }
+        setFormsBySpecies(map);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -182,12 +205,16 @@ export default function CalcPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-4 pb-24">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('calc.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{t('calc.subtitle')}</p>
         </div>
-        <EVModeToggle mode={state.evMode} onChange={(m) => dispatch({ type: 'SET_EV_MODE', mode: m })} />
+        <div className="flex items-center gap-2">
+          <EVModeToggle mode={state.evMode} onChange={(m) => dispatch({ type: 'SET_EV_MODE', mode: m })} />
+          <ThemeSwitcher />
+          <LanguageSwitcher />
+        </div>
       </header>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -200,6 +227,7 @@ export default function CalcPage() {
           openPicker={() => setPickerOpen('attacker')}
           locale={locale}
           label={t('calc.attacker')}
+          formsBySpecies={formsBySpecies}
         />
         <SidePanel
           side="defender"
@@ -210,6 +238,7 @@ export default function CalcPage() {
           openPicker={() => setPickerOpen('defender')}
           locale={locale}
           label={t('calc.defender')}
+          formsBySpecies={formsBySpecies}
         />
       </div>
 
@@ -283,9 +312,14 @@ interface SidePanelProps {
   openPicker: () => void;
   locale: string;
   label: string;
+  formsBySpecies: Map<number, PokemonSummary[]>;
 }
 
-function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale, label }: SidePanelProps) {
+function isMegaForm(p: { name: string }): boolean {
+  return p.name.startsWith('Mega ') || p.name.startsWith('Primal ');
+}
+
+function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale, label, formsBySpecies }: SidePanelProps) {
   if (!detail) {
     return (
       <div className="border rounded-lg p-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -295,6 +329,18 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
     );
   }
   const cfg = side === 'attacker' ? state.attacker : state.defender;
+  const siblings = formsBySpecies.get(detail.species_id) ?? [];
+  const megaForms = siblings.filter(isMegaForm);
+  const baseForm = siblings.find((p) => !isMegaForm(p));
+  const currentIsMega = isMegaForm(detail);
+  const formButtons: PokemonSummary[] = [];
+  if (currentIsMega && baseForm) formButtons.push(baseForm);
+  formButtons.push(...megaForms);
+  const setPokemon = (id: number, preserveMoves = false) => dispatch(
+    side === 'attacker'
+      ? { type: 'SET_ATTACKER_POKEMON', id, preserveMoves }
+      : { type: 'SET_DEFENDER_POKEMON', id },
+  );
   const setEVs = (evs: Stats) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_EVS' : 'SET_DEFENDER_EVS', evs });
   const setIVs = (ivs: Stats) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_IVS' : 'SET_DEFENDER_IVS', ivs });
   const setLvl = (l: number) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_LEVEL' : 'SET_DEFENDER_LEVEL', level: l });
@@ -317,6 +363,28 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
           </div>
         </div>
       </button>
+      {formButtons.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {formButtons.map((f) => {
+            const active = f.id === detail.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setPokemon(f.id, true)}
+                disabled={active}
+                className={`px-2 py-1 text-xs rounded border ${
+                  active
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'border-purple-400 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30'
+                }`}
+              >
+                {localizedName(f.names, locale)}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <BaseStatOverridePanel
         speciesBase={detail.stats}
         speciesTypes={detail.types.map((tt) => tt.id)}

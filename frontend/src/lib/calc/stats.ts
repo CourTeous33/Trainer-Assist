@@ -55,6 +55,14 @@ function totalCap(mode: EVMode): number {
   return mode === 'champion' ? MAX_TOTAL_EV_CHAMPION : MAX_TOTAL_EV_TRADITIONAL;
 }
 
+export function convertEVsBetweenModes(evs: Stats, fromMode: EVMode, toMode: EVMode): Stats {
+  if (fromMode === toMode) return clampEVsForMode(evs, toMode);
+  const ratio = perStatCap(toMode) / perStatCap(fromMode);
+  const scaled = { ...evs };
+  for (const k of STAT_KEYS) scaled[k] = Math.round(evs[k] * ratio);
+  return clampEVsForMode(scaled, toMode);
+}
+
 export function clampEVsForMode(evs: Stats, mode: EVMode): Stats {
   const perStat = perStatCap(mode);
   const total = totalCap(mode);
