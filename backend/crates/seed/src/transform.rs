@@ -259,13 +259,11 @@ pub fn transform(data: &ParsedData) -> TransformedData {
     }
 
     // -----------------------------------------------------------------------
-    // Build Pokemon models (all forms including regional variants)
+    // Build Pokemon models (default forms, regional variants, megas, primal, gmax)
     // -----------------------------------------------------------------------
 
-    // Exclude: mega evolutions, gmax, battle-only, cosmetic, totem forms
+    // Exclude: battle-only, cosmetic, totem forms (mega/gmax/primal are now INCLUDED)
     let excluded_suffixes = [
-        "mega", "mega-x", "mega-y",
-        "gmax",
         "totem", "totem-busted",
         "starter", "belle", "libre", "cosplay", "pop-star", "phd", "rock-star",
         "original-cap", "hoenn-cap", "sinnoh-cap", "unova-cap", "kalos-cap",

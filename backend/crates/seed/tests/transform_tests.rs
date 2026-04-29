@@ -7,14 +7,22 @@ fn make_csvs() -> HashMap<String, String> {
     let mut csvs = HashMap::new();
 
     // Includes: pikachu (default), raichu (default), raichu-alola (non-default regional),
-    // charizard (default), charizard-mega (should be excluded)
+    // charizard (default), charizard-mega-x (INCLUDED after whitelist broadening),
+    // charizard-gmax (INCLUDED after whitelist broadening),
+    // kyogre (default), primal-kyogre (INCLUDED after whitelist broadening),
+    // eternatus (default), eternatus-eternamax (remains EXCLUDED)
     csvs.insert("pokemon.csv".into(),
         "id,identifier,species_id,height,weight,base_experience,order,is_default\n\
          25,pikachu,25,4,60,112,35,1\n\
          26,raichu,26,8,300,218,36,1\n\
          10100,raichu-alola,26,7,210,218,37,0\n\
          6,charizard,6,17,905,267,7,1\n\
-         10034,charizard-mega-x,6,17,1005,285,8,0\n".into());
+         10034,charizard-mega-x,6,17,1005,285,8,0\n\
+         10195,charizard-gmax,6,280,10050,302,9,0\n\
+         382,kyogre,382,52,1950,218,265,1\n\
+         10155,primal-kyogre,382,95,4300,302,266,0\n\
+         890,eternatus,890,200,9500,345,848,1\n\
+         10229,eternatus-eternamax,890,1000,99999,345,849,0\n".into());
 
     csvs.insert("pokemon_types.csv".into(),
         "pokemon_id,type_id,slot\n\
@@ -52,13 +60,51 @@ fn make_csvs() -> HashMap<String, String> {
          6,3,78,0\n\
          6,4,109,0\n\
          6,5,85,0\n\
-         6,6,100,0\n".into());
+         6,6,100,0\n\
+         10034,1,78,0\n\
+         10034,2,130,0\n\
+         10034,3,111,0\n\
+         10034,4,130,0\n\
+         10034,5,85,0\n\
+         10034,6,100,0\n\
+         10195,1,78,0\n\
+         10195,2,104,0\n\
+         10195,3,78,0\n\
+         10195,4,109,0\n\
+         10195,5,85,0\n\
+         10195,6,100,0\n\
+         382,1,100,0\n\
+         382,2,100,0\n\
+         382,3,90,0\n\
+         382,4,150,0\n\
+         382,5,140,0\n\
+         382,6,90,0\n\
+         10155,1,100,0\n\
+         10155,2,150,0\n\
+         10155,3,90,0\n\
+         10155,4,180,0\n\
+         10155,5,160,0\n\
+         10155,6,90,0\n\
+         890,1,140,0\n\
+         890,2,85,0\n\
+         890,3,95,0\n\
+         890,4,145,0\n\
+         890,5,95,0\n\
+         890,6,130,0\n\
+         10229,1,255,0\n\
+         10229,2,115,0\n\
+         10229,3,250,0\n\
+         10229,4,125,0\n\
+         10229,5,250,0\n\
+         10229,6,130,0\n".into());
 
     csvs.insert("pokemon_species.csv".into(),
         "id,identifier,generation_id,evolves_from_species_id,evolution_chain_id,color_id,shape_id,habitat_id,gender_rate,capture_rate,base_happiness,is_baby,hatch_counter,has_gender_differences,growth_rate_id,forms_switchable,is_legendary,is_mythical,order,conquest_order\n\
          25,pikachu,1,,10,10,8,2,4,190,70,0,10,1,1,0,0,0,35,\n\
          26,raichu,1,25,10,10,6,2,4,75,70,0,10,1,1,0,0,0,36,\n\
-         6,charizard,1,5,2,10,6,4,1,45,70,0,20,0,4,0,0,0,7,\n".into());
+         6,charizard,1,5,2,10,6,4,1,45,70,0,20,0,4,0,0,0,7,\n\
+         382,kyogre,3,,184,10,10,,-1,5,35,0,80,0,1,0,1,0,265,\n\
+         890,eternatus,8,,363,4,8,,-1,255,0,0,120,0,4,0,1,0,848,\n".into());
 
     csvs.insert("pokemon_species_names.csv".into(),
         "pokemon_species_id,local_language_id,name,genus\n\
@@ -68,7 +114,9 @@ fn make_csvs() -> HashMap<String, String> {
          26,9,Raichu,Mouse Pokémon\n\
          26,1,ライチュウ,ねずみポケモン\n\
          6,9,Charizard,Flame Pokémon\n\
-         6,1,リザードン,かえんポケモン\n".into());
+         6,1,リザードン,かえんポケモン\n\
+         382,9,Kyogre,Sea Basin Pokémon\n\
+         890,9,Eternatus,Infinity Pokémon\n".into());
 
     csvs.insert("types.csv".into(),
         "id,identifier,generation_id,damage_class_id\n\
@@ -150,15 +198,58 @@ fn make_csvs() -> HashMap<String, String> {
 }
 
 #[test]
-fn excludes_mega_evolutions() {
+fn includes_mega_evolutions() {
     let csvs = make_csvs();
     let parsed = parse_all(&csvs).unwrap();
     let result = transform(&parsed);
 
-    // Should have pikachu, raichu, raichu-alola, charizard = 4
-    // Mega charizard should be excluded
-    assert_eq!(result.pokemon_summaries.len(), 4);
-    assert!(result.pokemon_summaries.iter().all(|p| !p.name.contains("Mega")));
+    // Should include pikachu, raichu, raichu-alola, charizard, charizard-mega-x,
+    // charizard-gmax, kyogre, primal-kyogre, eternatus = 9
+    // (eternatus-eternamax is still excluded)
+    assert_eq!(result.pokemon_summaries.len(), 9);
+    let ids: Vec<i32> = result.pokemon_summaries.iter().map(|p| p.id).collect();
+    assert!(ids.contains(&10034), "charizard-mega-x (10034) should be included");
+    assert!(!ids.contains(&10229), "eternatus-eternamax (10229) should still be excluded");
+}
+
+#[test]
+fn includes_mega_x_form() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    let mega_x = result.pokemon_summaries.iter().find(|p| p.id == 10034);
+    assert!(mega_x.is_some(), "charizard-mega-x should be included");
+}
+
+#[test]
+fn includes_gmax_form() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    let gmax = result.pokemon_summaries.iter().find(|p| p.id == 10195);
+    assert!(gmax.is_some(), "charizard-gmax should be included");
+}
+
+#[test]
+fn includes_primal_form() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    let primal = result.pokemon_summaries.iter().find(|p| p.id == 10155);
+    assert!(primal.is_some(), "primal-kyogre should be included");
+}
+
+#[test]
+fn excludes_eternamax_form() {
+    let csvs = make_csvs();
+    let parsed = parse_all(&csvs).unwrap();
+    let result = transform(&parsed);
+
+    let eternamax = result.pokemon_summaries.iter().find(|p| p.id == 10229);
+    assert!(eternamax.is_none(), "eternatus-eternamax should remain excluded");
 }
 
 #[test]
