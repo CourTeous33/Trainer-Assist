@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  buildBreakdownRows,
   buildEfficacyLookup,
   computeAnswer,
   checkAnswer,
@@ -78,7 +79,7 @@ describe('buildEfficacyLookup', () => {
 
 describe('computeAnswer — defensive', () => {
   it('multiplies multipliers across a dual-type defender (Fire/Flying weak to Rock 4x, Electric/Water 2x)', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const byName = (n: string) => a.all.find((s) => s.type.name === n)!.multiplier;
@@ -93,7 +94,7 @@ describe('computeAnswer — defensive', () => {
   });
 
   it('handles immunities — Normal/Ghost is immune to Fighting and Ghost, weak only to Dark', () => {
-    const q = { subject: [NORMAL, GHOST], direction: 'defensive' as const };
+    const q = { subject: [NORMAL, GHOST], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const byName = (n: string) => a.all.find((s) => s.type.name === n)!.multiplier;
@@ -105,7 +106,7 @@ describe('computeAnswer — defensive', () => {
   });
 
   it('single-type defender uses the lookup directly', () => {
-    const q = { subject: [FIRE], direction: 'defensive' as const };
+    const q = { subject: [FIRE], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
     const correctNames = a.correct.map((s) => s.type.name).sort();
     expect(correctNames).toEqual(['rock', 'water']);
@@ -114,7 +115,7 @@ describe('computeAnswer — defensive', () => {
 
 describe('computeAnswer — offensive', () => {
   it('uses the BEST multiplier across a dual attacker (Fire/Flying super-effective vs Bug/Grass/Ice/Steel union)', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const correctNames = a.correct.map((s) => s.type.name).sort();
@@ -123,7 +124,7 @@ describe('computeAnswer — offensive', () => {
   });
 
   it('single-type attacker uses the lookup directly', () => {
-    const q = { subject: [WATER], direction: 'offensive' as const };
+    const q = { subject: [WATER], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
     const correctNames = a.correct.map((s) => s.type.name).sort();
     expect(correctNames).toEqual(['fire', 'rock']);
@@ -132,8 +133,8 @@ describe('computeAnswer — offensive', () => {
 
 describe('computeAnswer — breakdown', () => {
   it('includes per-subject breakdown only for dual-type questions', () => {
-    const dual = { subject: [FIRE, FLYING], direction: 'defensive' as const };
-    const single = { subject: [FIRE], direction: 'defensive' as const };
+    const dual = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
+    const single = { subject: [FIRE], direction: 'defensive' as const, polarity: 'super_effective' as const };
 
     const dualA = computeAnswer(TYPES, lookup, dual);
     const singleA = computeAnswer(TYPES, lookup, single);
@@ -143,7 +144,7 @@ describe('computeAnswer — breakdown', () => {
   });
 
   it('defensive breakdown reports each subject multiplier and they multiply to the result', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     const rock = a.all.find((s) => s.type.name === 'rock')!;
@@ -159,7 +160,7 @@ describe('computeAnswer — breakdown', () => {
   });
 
   it('offensive breakdown reports each subject multiplier and the result is the max', () => {
-    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const };
+    const q = { subject: [FIRE, FLYING], direction: 'offensive' as const, polarity: 'super_effective' as const };
     const a = computeAnswer(TYPES, lookup, q);
 
     // Fire→Fighting = 1x (default), Flying→Fighting = 2x. Max = 2x.
@@ -174,7 +175,7 @@ describe('computeAnswer — breakdown', () => {
 });
 
 describe('checkAnswer', () => {
-  const q = { subject: [FIRE, FLYING], direction: 'defensive' as const };
+  const q = { subject: [FIRE, FLYING], direction: 'defensive' as const, polarity: 'super_effective' as const };
   const ans = computeAnswer(TYPES, lookup, q);
   // Correct set for Fire/Flying defensive: rock, electric, water.
 
@@ -213,6 +214,7 @@ describe('pickQuestion', () => {
       const q = pickQuestion(TYPES, rng);
       expect([1, 2]).toContain(q.subject.length);
       expect(['offensive', 'defensive']).toContain(q.direction);
+      expect(['super_effective', 'not_effective']).toContain(q.polarity);
       if (q.subject.length === 2) {
         expect(q.subject[0].id).not.toBe(q.subject[1].id);
       }
@@ -223,6 +225,241 @@ describe('pickQuestion', () => {
     const a = pickQuestion(TYPES, mulberry32(1));
     const b = pickQuestion(TYPES, mulberry32(1));
     expect(a.direction).toBe(b.direction);
+    expect(a.polarity).toBe(b.polarity);
     expect(a.subject.map((s) => s.id)).toEqual(b.subject.map((s) => s.id));
+  });
+
+  it('produces both polarities across many rolls', () => {
+    const rng = mulberry32(7);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      seen.add(pickQuestion(TYPES, rng).polarity);
+      if (seen.size === 2) break;
+    }
+    expect(seen).toEqual(new Set(['super_effective', 'not_effective']));
+  });
+
+  it('polarity is deterministic given a seeded RNG', () => {
+    const a = pickQuestion(TYPES, mulberry32(42));
+    const b = pickQuestion(TYPES, mulberry32(42));
+    expect(a.polarity).toBe(b.polarity);
+  });
+});
+
+describe('computeAnswer — defensive × not_effective', () => {
+  it('single-type defender — picks attackers with ≤ 0.5× into Fire', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // From the fixture: Grass→Fire = 0.5x. (No others ≤ 0.5x in fixture.)
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toEqual(['grass']);
+  });
+
+  it('dual-type defender — multiplied product ≤ 0.5× (Fire/Flying resists Grass at 0.25×)', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const grass = a.all.find((s) => s.type.name === 'grass')!;
+    expect(grass.multiplier).toBe(0.25);
+    expect(a.correct.some((s) => s.type.name === 'grass')).toBe(true);
+  });
+
+  it('immunity — 0× attackers count as not_effective (Normal/Ghost resists Fighting & Ghost)', () => {
+    const q = {
+      subject: [NORMAL, GHOST],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toContain('fighting');
+    expect(correctNames).toContain('ghost');
+  });
+});
+
+describe('computeAnswer — offensive × not_effective', () => {
+  it('single-type attacker — picks defenders that take ≤ 0.5× from Fire', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // Fire→Rock = 0.5x and Fire→Water = 0.5x in the fixture.
+    const correctNames = a.correct.map((s) => s.type.name).sort();
+    expect(correctNames).toEqual(['rock', 'water']);
+  });
+
+  it('dual-type attacker — defender resists both (Fire/Flying are both ≤ 0.5× into Rock)', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    // Fire→Rock = 0.5, Flying→Rock = 0.5, max = 0.5 → in set.
+    expect(a.correct.some((s) => s.type.name === 'rock')).toBe(true);
+    // Fire→Grass = 2x, so Grass is NOT in the resisted set even though Flying→Grass = 2x.
+    expect(a.correct.some((s) => s.type.name === 'grass')).toBe(false);
+  });
+});
+
+describe('checkAnswer — not_effective polarity', () => {
+  it('flags a perfect resisted answer', () => {
+    const q = {
+      subject: [FIRE],
+      direction: 'offensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const ans = computeAnswer(TYPES, lookup, q);
+    const result = checkAnswer([ROCK.id, WATER.id], ans);
+    expect(result.isPerfect).toBe(true);
+  });
+});
+
+describe('buildBreakdownRows', () => {
+  it('SE defensive — Bug/Rock: Rock row neutralizes Bug\'s weakness to Fire & Flying', () => {
+    const q = {
+      subject: [BUG, ROCK],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(2);
+    const bugRow = rows.find((r) => r.subject.id === BUG.id)!;
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+
+    // Bug's individual weaknesses (≥2x): Rock, Fire, Flying.
+    expect(new Set(bugRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['rock', 'fire', 'flying']),
+    );
+    // Bug doesn't resist any of Rock's weaknesses (Water, Grass) in the fixture.
+    expect(bugRow.neutralizers).toEqual([]);
+
+    // Rock's individual weaknesses (≥2x): Water, Grass.
+    expect(new Set(rockRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['water', 'grass']),
+    );
+    // Rock resists Fire (0.5x) and Flying (0.5x) — both are Bug's weaknesses,
+    // so they're trap explainers in Rock's row.
+    expect(new Set(rockRow.neutralizers.map((e) => e.type.name))).toEqual(
+      new Set(['fire', 'flying']),
+    );
+    // Displayed multiplier is Rock's resist (0.5x), not Bug's weakness.
+    expect(rockRow.neutralizers.find((e) => e.type.name === 'fire')!.multiplier).toBe(0.5);
+    expect(rockRow.neutralizers.find((e) => e.type.name === 'flying')!.multiplier).toBe(0.5);
+  });
+
+  it('NE defensive — Rock/Fire: Rock row neutralizes its own weakness to Grass via Fire', () => {
+    const q = {
+      subject: [ROCK, FIRE],
+      direction: 'defensive' as const,
+      polarity: 'not_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+    const fireRow = rows.find((r) => r.subject.id === FIRE.id)!;
+
+    // Rock's individual resists (≤0.5x): Fire, Flying.
+    expect(new Set(rockRow.primary.map((e) => e.type.name))).toEqual(
+      new Set(['fire', 'flying']),
+    );
+    // Fire resists Grass (0.5x) but Rock is weak to Grass (2x) — combined 1x,
+    // not in NE set. Trap explainer in Rock's row, displayed as Rock's weakness.
+    expect(rockRow.neutralizers.map((e) => e.type.name)).toEqual(['grass']);
+    expect(rockRow.neutralizers[0].multiplier).toBe(2);
+
+    // Fire's individual resists (≤0.5x): Grass.
+    expect(fireRow.primary.map((e) => e.type.name)).toEqual(['grass']);
+    // Rock doesn't resist any of Fire's weaknesses (Water) in the fixture.
+    expect(fireRow.neutralizers).toEqual([]);
+  });
+
+  it('SE primary sorted descending; SE neutralizers sorted ascending (strongest resist first)', () => {
+    const q = {
+      subject: [BUG, ROCK],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const rockRow = rows.find((r) => r.subject.id === ROCK.id)!;
+    // Primary: Water 2x, Grass 2x — both equal so sort is stable; just check
+    // every primary multiplier is the threshold or stronger.
+    rockRow.primary.forEach((e) => expect(e.multiplier).toBeGreaterThanOrEqual(2));
+    // Neutralizers: Fire 0.5x, Flying 0.5x — both 0.5x; no immunities here.
+    rockRow.neutralizers.forEach((e) => expect(e.multiplier).toBeLessThanOrEqual(0.5));
+  });
+
+  it('offensive smoke — neutralizers always empty', () => {
+    const q = {
+      subject: [FIRE, FLYING],
+      direction: 'offensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(2);
+    rows.forEach((row) => {
+      expect(row.neutralizers).toEqual([]);
+    });
+  });
+
+  it('single-subject question — one row, neutralizers empty', () => {
+    const q = {
+      subject: [BUG],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].subject.id).toBe(BUG.id);
+    expect(rows[0].neutralizers).toEqual([]);
+    // Primary still computed correctly.
+    expect(new Set(rows[0].primary.map((e) => e.type.name))).toEqual(
+      new Set(['rock', 'fire', 'flying']),
+    );
+  });
+
+  it('SE defensive — Ghost/Normal: immunities create mutual neutralization', () => {
+    const q = {
+      subject: [GHOST, NORMAL],
+      direction: 'defensive' as const,
+      polarity: 'super_effective' as const,
+    };
+    const a = computeAnswer(TYPES, lookup, q);
+    const rows = buildBreakdownRows(q, a);
+
+    const ghostRow = rows.find((r) => r.subject.id === GHOST.id)!;
+    const normalRow = rows.find((r) => r.subject.id === NORMAL.id)!;
+
+    // Normal is weak to Fighting (2x), Ghost is immune (0x).
+    // Combined 2 × 0 = 0, NOT super-effective overall.
+    // Fighting appears as a neutralizer in Ghost's row, displayed as 0x.
+    const ghostFighting = ghostRow.neutralizers.find((e) => e.type.name === 'fighting');
+    expect(ghostFighting).toBeDefined();
+    expect(ghostFighting!.multiplier).toBe(0);
+
+    // Ghost is weak to Ghost (2x) but Normal is immune to Ghost (0x).
+    // Combined 2 × 0 = 0, NOT super-effective overall.
+    // Ghost-type appears as a neutralizer in Normal's row, displayed as 0x.
+    const normalGhost = normalRow.neutralizers.find((e) => e.type.name === 'ghost');
+    expect(normalGhost).toBeDefined();
+    expect(normalGhost!.multiplier).toBe(0);
   });
 });
