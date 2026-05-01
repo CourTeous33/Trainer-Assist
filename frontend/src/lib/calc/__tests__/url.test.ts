@@ -118,5 +118,6 @@ describe('url serialization', () => {
     }));
     const s = deserializeState(blob);
     expect(s.attacker.stages).toEqual({ attack: 6, defense: -6, special_attack: 6, special_defense: -6 });
+    expect(s.defender.stages).toEqual({ attack: 0, defense: 0, special_attack: 0, special_defense: 0 });
   });
 });
