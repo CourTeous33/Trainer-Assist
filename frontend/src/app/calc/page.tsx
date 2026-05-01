@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   defaultCalcState, calculate, serializeState, deserializeState,
   clampEVsForMode, convertEVsBetweenModes, lockedIVsForMode, lockedLevelForMode,
-  type CalcState, type CalcInput, type EVMode, type NatureId,
+  type CalcState, type CalcInput, type EVMode, type NatureId, type StatStages,
 } from '@/lib/calc';
 import type { PokemonDetail, PokemonSummary, MoveSummary, TypeRef, TypeEfficacy, Stats } from '@/lib/types';
 import { getPokemon, getPokemonList, getTypes, getTypeEfficacy, getMoves } from '@/lib/api';
@@ -42,6 +42,8 @@ type Action =
   | { type: 'SET_DEFENDER_ITEM'; itemId: string | null }
   | { type: 'SET_ATTACKER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_DEFENDER_OVERRIDE'; base: Stats | null; types: number[] | null }
+  | { type: 'SET_ATTACKER_STAGE'; stat: keyof StatStages; value: number }
+  | { type: 'SET_DEFENDER_STAGE'; stat: keyof StatStages; value: number }
   | { type: 'SET_MOVE'; slot: 0 | 1 | 2 | 3; moveId: number | null }
   | { type: 'HYDRATE'; state: CalcState };
 
@@ -77,6 +79,14 @@ function calcReducer(state: CalcState, action: Action): CalcState {
     case 'SET_DEFENDER_ITEM':    return { ...state, defender: { ...state.defender, itemId: action.itemId } };
     case 'SET_ATTACKER_OVERRIDE': return { ...state, attacker: { ...state.attacker, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_DEFENDER_OVERRIDE': return { ...state, defender: { ...state.defender, baseStatsOverride: action.base, typesOverride: action.types } };
+    case 'SET_ATTACKER_STAGE': {
+      const v = Math.max(-6, Math.min(6, action.value));
+      return { ...state, attacker: { ...state.attacker, stages: { ...state.attacker.stages, [action.stat]: v } } };
+    }
+    case 'SET_DEFENDER_STAGE': {
+      const v = Math.max(-6, Math.min(6, action.value));
+      return { ...state, defender: { ...state.defender, stages: { ...state.defender.stages, [action.stat]: v } } };
+    }
     case 'SET_MOVE': {
       const moves = [...state.attacker.moveIds] as CalcState['attacker']['moveIds'];
       moves[action.slot] = action.moveId;
