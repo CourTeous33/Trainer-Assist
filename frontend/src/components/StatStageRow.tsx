@@ -10,13 +10,13 @@ interface Props {
 }
 
 const ATTACKER_KEYS: Array<{ stat: keyof StatStages; tKey: string }> = [
-  { stat: 'attack', tKey: 'calc.stages.atk' },
-  { stat: 'special_attack', tKey: 'calc.stages.spa' },
+  { stat: 'attack', tKey: 'calc.stat.atk' },
+  { stat: 'special_attack', tKey: 'calc.stat.spa' },
 ];
 
 const DEFENDER_KEYS: Array<{ stat: keyof StatStages; tKey: string }> = [
-  { stat: 'defense', tKey: 'calc.stages.def' },
-  { stat: 'special_defense', tKey: 'calc.stages.spd' },
+  { stat: 'defense', tKey: 'calc.stat.def' },
+  { stat: 'special_defense', tKey: 'calc.stat.spd' },
 ];
 
 export default function StatStageRow({ side, stages, onChange }: Props) {
@@ -45,13 +45,14 @@ export default function StatStageRow({ side, stages, onChange }: Props) {
                 onClick={() => onChange(stat, value - 1)}
                 disabled={value <= -6}
                 aria-label={`${t(tKey)} -1`}
-                className="h-7 w-7 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-7 w-7 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 −
               </button>
               <button
                 type="button"
                 onClick={() => onChange(stat, 0)}
+                aria-label={`${t(tKey)} ${t('calc.stages.reset')}`}
                 title={t('calc.stages.reset')}
                 className={`h-7 w-8 font-semibold tabular-nums ${tone} hover:underline`}
               >
@@ -62,7 +63,7 @@ export default function StatStageRow({ side, stages, onChange }: Props) {
                 onClick={() => onChange(stat, value + 1)}
                 disabled={value >= 6}
                 aria-label={`${t(tKey)} +1`}
-                className="h-7 w-7 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-7 w-7 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 +
               </button>
