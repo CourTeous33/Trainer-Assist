@@ -163,16 +163,19 @@ describe('calculateDamage', () => {
       move: specialMove,
       defender: { ...input({}).defender, stages: { attack: 0, defense: 0, special_attack: 0, special_defense: -1 } },
     })) as { rolls: number[] };
-    expect(dropped.rolls[0]).toBeGreaterThan(baseline.rolls[0]);
+    expect(dropped.rolls[0]).toBeGreaterThan(baseline.rolls[0] * 1.4);
+    expect(dropped.rolls[0]).toBeLessThan(baseline.rolls[0] * 1.6);
   });
 
-  it('+6 attacker Atk produces ~4x attackerStat on a physical move', () => {
-    const baseline = calculateDamage(input({})) as { attackerStat: number };
+  it('+6 attacker Atk produces ~4x attackerStat and ~3.8x rolls on a physical move', () => {
+    const baseline = calculateDamage(input({})) as { rolls: number[]; attackerStat: number };
     const max = calculateDamage(input({
       attacker: { ...input({}).attacker, stages: { attack: 6, defense: 0, special_attack: 0, special_defense: 0 } },
-    })) as { attackerStat: number };
+    })) as { rolls: number[]; attackerStat: number };
     expect(max.attackerStat).toBeGreaterThan(baseline.attackerStat * 3.9);
     expect(max.attackerStat).toBeLessThan(baseline.attackerStat * 4.1);
+    expect(max.rolls[0]).toBeGreaterThan(baseline.rolls[0] * 3);
+    expect(max.rolls[0]).toBeLessThan(baseline.rolls[0] * 4.1);
   });
 
   it('stages on stats irrelevant to the move do not change damage', () => {
