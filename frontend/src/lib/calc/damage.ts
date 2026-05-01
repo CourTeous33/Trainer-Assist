@@ -1,5 +1,5 @@
 import type { CalcInput, CalcOutcome, CalcResult, UnsupportedResult, UnsupportedReason } from './types';
-import { computeAllStats } from './stats';
+import { computeAllStats, stageMultiplier } from './stats';
 import { getNature } from './natures';
 import { getItem } from './items';
 
@@ -49,7 +49,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
 
   const isPhysical = move.damage_class === 'physical';
   let A = isPhysical ? aStats.attack : aStats.special_attack;
-  const D = isPhysical ? dStats.defense : dStats.special_defense;
+  let D = isPhysical ? dStats.defense : dStats.special_defense;
 
   let itemMultDamage = 1.0;
   const item = attacker.itemId ? getItem(attacker.itemId) : undefined;
@@ -75,6 +75,11 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
       }
     }
   }
+
+  const aStageKey = isPhysical ? 'attack' : 'special_attack';
+  const dStageKey = isPhysical ? 'defense' : 'special_defense';
+  A = Math.floor(A * stageMultiplier(attacker.stages[aStageKey]));
+  D = Math.floor(D * stageMultiplier(defender.stages[dStageKey]));
 
   let typeEff = 1.0;
   for (const dType of dTypes) {

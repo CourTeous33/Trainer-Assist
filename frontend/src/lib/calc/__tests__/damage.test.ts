@@ -15,12 +15,14 @@ function input(over: Partial<CalcInput>): CalcInput {
       ivs: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
       evs: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
       nature: 'hardy', itemId: null,
+      stages: { attack: 0, defense: 0, special_attack: 0, special_defense: 0 },
     },
     defender: {
       pokemonId: 2, baseStatsOverride: null, typesOverride: null, level: 50,
       ivs: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
       evs: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
       nature: 'hardy', itemId: null,
+      stages: { attack: 0, defense: 0, special_attack: 0, special_defense: 0 },
     },
     attackerSpecies: { types: [1], baseStats },
     defenderSpecies: { types: [1], baseStats },
@@ -141,5 +143,46 @@ describe('calculateDamage', () => {
     expect(out.modifiers.typeEff).toBe(1.0);
     expect(out.rolls[0]).toBeGreaterThan(0);
     expect(out.rolls[15]).toBeGreaterThan(out.rolls[0]);
+  });
+
+  it('+2 SpA roughly doubles rolls vs the same defender on a special move', () => {
+    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const baseline = calculateDamage(input({ move: specialMove })) as { rolls: number[] };
+    const boosted = calculateDamage(input({
+      move: specialMove,
+      attacker: { ...input({}).attacker, stages: { attack: 0, defense: 0, special_attack: 2, special_defense: 0 } },
+    })) as { rolls: number[] };
+    expect(boosted.rolls[0]).toBeGreaterThan(baseline.rolls[0] * 1.9);
+    expect(boosted.rolls[15]).toBeLessThan(baseline.rolls[15] * 2.1);
+  });
+
+  it('-1 defender SpD increases damage from a special move', () => {
+    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const baseline = calculateDamage(input({ move: specialMove })) as { rolls: number[] };
+    const dropped = calculateDamage(input({
+      move: specialMove,
+      defender: { ...input({}).defender, stages: { attack: 0, defense: 0, special_attack: 0, special_defense: -1 } },
+    })) as { rolls: number[] };
+    expect(dropped.rolls[0]).toBeGreaterThan(baseline.rolls[0]);
+  });
+
+  it('+6 attacker Atk produces ~4x attackerStat on a physical move', () => {
+    const baseline = calculateDamage(input({})) as { attackerStat: number };
+    const max = calculateDamage(input({
+      attacker: { ...input({}).attacker, stages: { attack: 6, defense: 0, special_attack: 0, special_defense: 0 } },
+    })) as { attackerStat: number };
+    expect(max.attackerStat).toBeGreaterThan(baseline.attackerStat * 3.9);
+    expect(max.attackerStat).toBeLessThan(baseline.attackerStat * 4.1);
+  });
+
+  it('stages on stats irrelevant to the move do not change damage', () => {
+    const baseline = calculateDamage(input({})) as { rolls: number[]; attackerStat: number; defenderStat: number };
+    const irrelevant = calculateDamage(input({
+      attacker: { ...input({}).attacker, stages: { attack: 0, defense: 6, special_attack: 6, special_defense: 6 } },
+      defender: { ...input({}).defender, stages: { attack: 6, defense: 0, special_attack: 6, special_defense: 6 } },
+    })) as { rolls: number[]; attackerStat: number; defenderStat: number };
+    expect(irrelevant.attackerStat).toBe(baseline.attackerStat);
+    expect(irrelevant.defenderStat).toBe(baseline.defenderStat);
+    expect(irrelevant.rolls).toEqual(baseline.rolls);
   });
 });
