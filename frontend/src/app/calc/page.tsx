@@ -18,6 +18,7 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import EVStatTable from '@/components/EVStatTable';
 import NatureDropdown from '@/components/NatureDropdown';
 import ItemDropdown from '@/components/ItemDropdown';
+import StatStageRow from '@/components/StatStageRow';
 import BaseStatOverridePanel from '@/components/BaseStatOverridePanel';
 import PokemonPicker from '@/components/PokemonPicker';
 import MoveSlot from '@/components/MoveSlot';
@@ -358,6 +359,11 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
   const setItem = (i: string | null) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_ITEM' : 'SET_DEFENDER_ITEM', itemId: i });
   const setOver = (base: Stats | null, types: number[] | null) =>
     dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_OVERRIDE' : 'SET_DEFENDER_OVERRIDE', base, types });
+  const setStage = (stat: keyof StatStages, value: number) => dispatch(
+    side === 'attacker'
+      ? { type: 'SET_ATTACKER_STAGE', stat, value }
+      : { type: 'SET_DEFENDER_STAGE', stat, value },
+  );
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-3">
       <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</div>
@@ -407,6 +413,7 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
         <NatureDropdown value={cfg.nature} onChange={setNat} />
         <ItemDropdown value={cfg.itemId} onChange={setItem} />
       </div>
+      <StatStageRow side={side} stages={cfg.stages} onChange={setStage} />
       <EVStatTable
         mode={state.evMode}
         base={cfg.baseStatsOverride ?? detail.stats}
