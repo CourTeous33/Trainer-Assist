@@ -1,5 +1,6 @@
 import type { Stats } from '@/lib/types';
-import type { EVMode, NatureId } from './types';
+import type { EVMode, NatureId, StatStages } from './types';
+import { ZERO_STAGES } from './types';
 import { clampEVsForMode, lockedIVsForMode, lockedLevelForMode } from './stats';
 
 export interface CalcState {
@@ -17,6 +18,7 @@ export interface DefenderState {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  stages: StatStages;
 }
 
 export interface AttackerState extends DefenderState {
@@ -35,12 +37,14 @@ export function defaultCalcState(): CalcState {
       pokemonId: DEFAULT_ATTACKER_ID,
       baseStatsOverride: null, typesOverride: null,
       level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null,
+      stages: { ...ZERO_STAGES },
       moveIds: [null, null, null, null],
     },
     defender: {
       pokemonId: DEFAULT_DEFENDER_ID,
       baseStatsOverride: null, typesOverride: null,
       level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null,
+      stages: { ...ZERO_STAGES },
     },
   };
 }
@@ -66,6 +70,17 @@ function clampStats(input: unknown, max: number): Stats {
   };
 }
 
+function clampStages(input: unknown): StatStages {
+  const obj = (input ?? {}) as Partial<StatStages>;
+  const c = (n: unknown) => Math.max(-6, Math.min(6, Math.floor(Number(n) || 0)));
+  return {
+    attack: c(obj.attack),
+    defense: c(obj.defense),
+    special_attack: c(obj.special_attack),
+    special_defense: c(obj.special_defense),
+  };
+}
+
 function packSide(side: AttackerState | DefenderState, isAttacker: boolean): Record<string, unknown> {
   const base: Record<string, unknown> = {
     p: side.pokemonId,
@@ -76,6 +91,7 @@ function packSide(side: AttackerState | DefenderState, isAttacker: boolean): Rec
     it: side.itemId,
     bso: side.baseStatsOverride,
     to: side.typesOverride,
+    st: side.stages,
   };
   if (isAttacker) base.mv = (side as AttackerState).moveIds;
   return base;
@@ -96,7 +112,8 @@ function unpackSide(raw: unknown, isAttacker: boolean, mode: EVMode): AttackerSt
   const typesOverride = Array.isArray(r.to)
     ? (r.to as unknown[]).slice(0, 2).map((x) => Math.max(1, Math.floor(Number(x) || 1)))
     : null;
-  const side: DefenderState = { pokemonId, level, ivs, evs: evsClamped, nature, itemId, baseStatsOverride, typesOverride };
+  const stages = clampStages(r.st);
+  const side: DefenderState = { pokemonId, level, ivs, evs: evsClamped, nature, itemId, baseStatsOverride, typesOverride, stages };
   if (isAttacker) {
     const mv = Array.isArray(r.mv) ? r.mv : [];
     const moveIds: AttackerState['moveIds'] = [
