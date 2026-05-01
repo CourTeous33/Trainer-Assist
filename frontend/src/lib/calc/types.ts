@@ -41,6 +41,7 @@ export interface PokemonConfig {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  stages: StatStages;
 }
 
 export interface CalcInput {
@@ -91,4 +92,15 @@ export const ZERO_EVS: Stats = {
 
 export const MAX_IVS: Stats = {
   hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31,
+};
+
+export interface StatStages {
+  attack: number;
+  defense: number;
+  special_attack: number;
+  special_defense: number;
+}
+
+export const ZERO_STAGES: StatStages = {
+  attack: 0, defense: 0, special_attack: 0, special_defense: 0,
 };
