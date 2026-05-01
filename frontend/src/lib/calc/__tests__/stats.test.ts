@@ -74,3 +74,28 @@ describe('isLevelLockedForMode', () => {
     expect(isLevelLockedForMode('traditional')).toBe(false);
   });
 });
+
+import { stageMultiplier } from '../stats';
+
+describe('stageMultiplier', () => {
+  it('returns 1 at stage 0', () => {
+    expect(stageMultiplier(0)).toBe(1);
+  });
+
+  it('returns (2+n)/2 for positive stages', () => {
+    expect(stageMultiplier(1)).toBeCloseTo(1.5, 10);
+    expect(stageMultiplier(2)).toBe(2);
+    expect(stageMultiplier(6)).toBe(4);
+  });
+
+  it('returns 2/(2+|n|) for negative stages', () => {
+    expect(stageMultiplier(-1)).toBeCloseTo(2 / 3, 10);
+    expect(stageMultiplier(-2)).toBe(0.5);
+    expect(stageMultiplier(-6)).toBe(0.25);
+  });
+
+  it('clamps inputs outside [-6, 6]', () => {
+    expect(stageMultiplier(7)).toBe(stageMultiplier(6));
+    expect(stageMultiplier(-99)).toBe(stageMultiplier(-6));
+  });
+});
