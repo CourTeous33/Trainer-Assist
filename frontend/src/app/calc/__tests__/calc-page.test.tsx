@@ -38,4 +38,28 @@ describe('CalcPage smoke', () => {
       expect(screen.getAllByText(/%/).length).toBeGreaterThan(0);
     });
   });
+
+  it('clicking attacker Atk +1 changes the displayed damage', async () => {
+    render(<LocaleProvider><CalcPage /></LocaleProvider>);
+    await waitFor(() => expect(screen.getAllByText('Mon 94').length).toBeGreaterThan(0));
+
+    // Pick Earthquake into slot 1 so a result renders.
+    await userEvent.click(screen.getAllByText(/tap to add/i)[0]);
+    await userEvent.click(screen.getByText('Earthquake'));
+
+    // Wait for the damage range line (format: "X.X% – Y.Y% (avg Z.Z%)").
+    await waitFor(() => expect(screen.getAllByText(/^\d+\.\d+%/).length).toBeGreaterThan(0));
+
+    // Capture the damage range text before the stage change.
+    const firstPctBefore = screen.getAllByText(/^\d+\.\d+%/)[0].textContent;
+
+    // Earthquake is physical → bump attacker's Atk stage by clicking "Atk +1".
+    const plusBtn = screen.getByRole('button', { name: /Atk \+1/i });
+    await userEvent.click(plusBtn);
+
+    await waitFor(() => {
+      const firstPctAfter = screen.getAllByText(/^\d+\.\d+%/)[0].textContent;
+      expect(firstPctAfter).not.toBe(firstPctBefore);
+    });
+  });
 });
