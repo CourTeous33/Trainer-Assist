@@ -80,12 +80,12 @@ function calcReducer(state: CalcState, action: Action): CalcState {
     case 'SET_ATTACKER_OVERRIDE': return { ...state, attacker: { ...state.attacker, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_DEFENDER_OVERRIDE': return { ...state, defender: { ...state.defender, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_ATTACKER_STAGE': {
-      const v = Math.max(-6, Math.min(6, action.value));
-      return { ...state, attacker: { ...state.attacker, stages: { ...state.attacker.stages, [action.stat]: v } } };
+      const clamped = Math.max(-6, Math.min(6, Math.floor(action.value)));
+      return { ...state, attacker: { ...state.attacker, stages: { ...state.attacker.stages, [action.stat]: clamped } } };
     }
     case 'SET_DEFENDER_STAGE': {
-      const v = Math.max(-6, Math.min(6, action.value));
-      return { ...state, defender: { ...state.defender, stages: { ...state.defender.stages, [action.stat]: v } } };
+      const clamped = Math.max(-6, Math.min(6, Math.floor(action.value)));
+      return { ...state, defender: { ...state.defender, stages: { ...state.defender.stages, [action.stat]: clamped } } };
     }
     case 'SET_MOVE': {
       const moves = [...state.attacker.moveIds] as CalcState['attacker']['moveIds'];
