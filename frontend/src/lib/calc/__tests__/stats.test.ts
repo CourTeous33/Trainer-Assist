@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeStat, computeAllStats, clampEVsForMode, isLevelLockedForMode,
-  evTotal, MAX_TOTAL_EV_TRADITIONAL, MAX_PER_STAT_EV_TRADITIONAL,
+  evTotal, stageMultiplier,
+  MAX_TOTAL_EV_TRADITIONAL, MAX_PER_STAT_EV_TRADITIONAL,
   MAX_TOTAL_EV_CHAMPION, MAX_PER_STAT_EV_CHAMPION,
 } from '../stats';
 import { getNature } from '../natures';
@@ -75,15 +76,13 @@ describe('isLevelLockedForMode', () => {
   });
 });
 
-import { stageMultiplier } from '../stats';
-
 describe('stageMultiplier', () => {
   it('returns 1 at stage 0', () => {
     expect(stageMultiplier(0)).toBe(1);
   });
 
   it('returns (2+n)/2 for positive stages', () => {
-    expect(stageMultiplier(1)).toBeCloseTo(1.5, 10);
+    expect(stageMultiplier(1)).toBe(1.5);
     expect(stageMultiplier(2)).toBe(2);
     expect(stageMultiplier(6)).toBe(4);
   });
