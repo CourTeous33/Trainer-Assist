@@ -379,28 +379,26 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
           </div>
         </div>
       </button>
-      {formButtons.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {formButtons.map((f) => {
-            const active = f.id === detail.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setPokemon(f.id, true)}
-                disabled={active}
-                className={`px-2 py-1 text-xs rounded border ${
-                  active
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'border-purple-400 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30'
-                }`}
-              >
-                {localizedName(f.names, locale)}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-1 min-h-7">
+        {formButtons.map((f) => {
+          const active = f.id === detail.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setPokemon(f.id, true)}
+              disabled={active}
+              className={`px-2 py-1 text-xs rounded border ${
+                active
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'border-purple-400 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30'
+              }`}
+            >
+              {localizedName(f.names, locale)}
+            </button>
+          );
+        })}
+      </div>
       <BaseStatOverridePanel
         speciesBase={detail.stats}
         speciesTypes={detail.types.map((tt) => tt.id)}
