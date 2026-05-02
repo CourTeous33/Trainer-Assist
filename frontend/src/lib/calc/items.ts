@@ -50,5 +50,6 @@ export function getItem(id: string): Item | undefined {
 export const ITEMS_BY_TIER: Record<ItemTier, Item[]> = {
   top: ITEMS.filter((i) => i.tier === 'top'),
   'type-boost': ITEMS.filter((i) => i.tier === 'type-boost'),
+  'resist-berry': ITEMS.filter((i) => i.tier === 'resist-berry'),
   other: ITEMS.filter((i) => i.tier === 'other'),
 };

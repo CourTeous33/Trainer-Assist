@@ -18,7 +18,7 @@ export interface Nature {
   lowered: StatKey | null;
 }
 
-export type ItemTier = 'top' | 'type-boost' | 'other';
+export type ItemTier = 'top' | 'type-boost' | 'resist-berry' | 'other';
 
 export interface Item {
   id: string;
@@ -28,6 +28,7 @@ export interface Item {
   attackMult?: { stat: 'attack' | 'special_attack'; factor: number };
   typeBoost?: { typeId: number; factor: number };
   superEffectiveMult?: number;
+  defenderResistance?: { typeId: number; factor: number; requireSuperEffective: boolean };
   speciesGate?: number[];
   speciesGateNote?: string;
 }
