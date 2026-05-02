@@ -269,4 +269,77 @@ describe('calculateDamage', () => {
     })) as { modifiers: { berry: number } };
     expect(out.modifiers.berry).toBe(0.5);
   });
+
+  it('Body Press uses attacker Defense as offense stat', () => {
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    // High Defense, low Attack on the attacker.
+    const aDefHigh = { ...input({}).attacker, baseStatsOverride: { hp: 100, attack: 50, defense: 200, special_attack: 50, special_defense: 50, speed: 50 } };
+    const aAtkHigh = { ...input({}).attacker, baseStatsOverride: { hp: 100, attack: 200, defense: 50, special_attack: 50, special_defense: 50, speed: 50 } };
+    const bp = calculateDamage(input({ move: bodyPress, attacker: aDefHigh })) as { attackerStat: number };
+    const tackleHighDef = calculateDamage(input({ attacker: aDefHigh })) as { attackerStat: number };
+    const tackleHighAtk = calculateDamage(input({ attacker: aAtkHigh })) as { attackerStat: number };
+    // Body Press attackerStat reflects Defense (high), not Attack (low).
+    expect(bp.attackerStat).toBe(tackleHighAtk.attackerStat); // both read the "high" stat (200 base)
+    expect(bp.attackerStat).toBeGreaterThan(tackleHighDef.attackerStat); // tackle on aDefHigh reads its low Attack
+  });
+
+  it('Body Press is unaffected by attacker Atk stage but reads attacker Def stage', () => {
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    const baseline = calculateDamage(input({ move: bodyPress })) as { attackerStat: number };
+    const atkBoosted = calculateDamage(input({
+      move: bodyPress,
+      attacker: { ...input({}).attacker, stages: { attack: 6, defense: 0, special_attack: 0, special_defense: 0 } },
+    })) as { attackerStat: number };
+    const defBoosted = calculateDamage(input({
+      move: bodyPress,
+      attacker: { ...input({}).attacker, stages: { attack: 0, defense: 6, special_attack: 0, special_defense: 0 } },
+    })) as { attackerStat: number };
+    expect(atkBoosted.attackerStat).toBe(baseline.attackerStat);
+    expect(defBoosted.attackerStat).toBe(Math.floor(baseline.attackerStat * 4));
+  });
+
+  it('Choice Band does not boost Body Press', () => {
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    const noItem = calculateDamage(input({ move: bodyPress })) as { attackerStat: number };
+    const withBand = calculateDamage(input({
+      move: bodyPress,
+      attacker: { ...input({}).attacker, itemId: 'choice-band' },
+    })) as { attackerStat: number };
+    expect(withBand.attackerStat).toBe(noItem.attackerStat);
+  });
+
+  it('Foul Play uses defender Attack and defender Atk stage', () => {
+    const foulPlay = { id: 1, name: 'foul-play', names: { en: 'Foul Play' }, type_ref: { id: 17, name: 'dark', names: { en: 'Dark' } }, power: 95, accuracy: 100, pp: 15, damage_class: 'physical' as const };
+    // Defender has high Attack, low everything else.
+    const dHighAtk = { ...input({}).defender, baseStatsOverride: { hp: 100, attack: 200, defense: 50, special_attack: 50, special_defense: 50, speed: 50 } };
+    const baseline = calculateDamage(input({ move: foulPlay, defender: dHighAtk })) as { attackerStat: number };
+    // Defender +6 Atk should ~4x attackerStat.
+    const dBoosted = calculateDamage(input({
+      move: foulPlay,
+      defender: { ...dHighAtk, stages: { attack: 6, defense: 0, special_attack: 0, special_defense: 0 } },
+    })) as { attackerStat: number };
+    expect(dBoosted.attackerStat).toBe(Math.floor(baseline.attackerStat * 4));
+    // Attacker stages don't affect Foul Play.
+    const aBoosted = calculateDamage(input({
+      move: foulPlay,
+      defender: dHighAtk,
+      attacker: { ...input({}).attacker, stages: { attack: 6, defense: 0, special_attack: 0, special_defense: 0 } },
+    })) as { attackerStat: number };
+    expect(aBoosted.attackerStat).toBe(baseline.attackerStat);
+  });
+
+  it('Psyshock divides by defender Defense (not SpD) and reads defender Def stage', () => {
+    const psyshock = { id: 1, name: 'psyshock', names: { en: 'Psyshock' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const baseline = calculateDamage(input({ move: psyshock })) as { defenderStat: number };
+    const defBoost = calculateDamage(input({
+      move: psyshock,
+      defender: { ...input({}).defender, stages: { attack: 0, defense: 2, special_attack: 0, special_defense: 0 } },
+    })) as { defenderStat: number };
+    const spdBoost = calculateDamage(input({
+      move: psyshock,
+      defender: { ...input({}).defender, stages: { attack: 0, defense: 0, special_attack: 0, special_defense: 6 } },
+    })) as { defenderStat: number };
+    expect(defBoost.defenderStat).toBe(Math.floor(baseline.defenderStat * 2));
+    expect(spdBoost.defenderStat).toBe(baseline.defenderStat); // SpD stage irrelevant
+  });
 });
