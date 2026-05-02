@@ -413,7 +413,7 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
         <NatureDropdown value={cfg.nature} onChange={setNat} />
         <ItemDropdown value={cfg.itemId} onChange={setItem} />
       </div>
-      <StatStageRow side={side} stages={cfg.stages} onChange={setStage} />
+      <StatStageRow stages={cfg.stages} onChange={setStage} />
       <EVStatTable
         mode={state.evMode}
         base={cfg.baseStatsOverride ?? detail.stats}

@@ -4,32 +4,27 @@ import type { StatStages } from '@/lib/calc';
 import { useLocale } from '@/lib/i18n';
 
 interface Props {
-  side: 'attacker' | 'defender';
   stages: StatStages;
   onChange: (stat: keyof StatStages, value: number) => void;
 }
 
-const ATTACKER_KEYS: Array<{ stat: keyof StatStages; tKey: string }> = [
+const STAGE_KEYS: Array<{ stat: keyof StatStages; tKey: string }> = [
   { stat: 'attack', tKey: 'calc.stat.atk' },
-  { stat: 'special_attack', tKey: 'calc.stat.spa' },
-];
-
-const DEFENDER_KEYS: Array<{ stat: keyof StatStages; tKey: string }> = [
   { stat: 'defense', tKey: 'calc.stat.def' },
+  { stat: 'special_attack', tKey: 'calc.stat.spa' },
   { stat: 'special_defense', tKey: 'calc.stat.spd' },
 ];
 
-export default function StatStageRow({ side, stages, onChange }: Props) {
+export default function StatStageRow({ stages, onChange }: Props) {
   const { t } = useLocale();
-  const keys = side === 'attacker' ? ATTACKER_KEYS : DEFENDER_KEYS;
 
   return (
-    <div className="flex items-center gap-3 text-xs">
+    <div className="flex items-center gap-3 text-xs flex-wrap">
       <span className="uppercase tracking-wide text-gray-500 dark:text-gray-400">
         {t('calc.stages.label')}
       </span>
-      <div className="flex flex-1 gap-3">
-        {keys.map(({ stat, tKey }) => {
+      <div className="flex flex-1 gap-3 flex-wrap">
+        {STAGE_KEYS.map(({ stat, tKey }) => {
           const value = stages[stat];
           const display = value > 0 ? `+${value}` : value < 0 ? `−${-value}` : '0';
           const tone = value > 0

@@ -53,9 +53,9 @@ describe('CalcPage smoke', () => {
     // Capture the damage range text before the stage change.
     const firstPctBefore = screen.getAllByText(/^\d+(?:\.\d+)?%/)[0].textContent;
 
-    // Earthquake is physical → bump attacker's Atk stage by clicking "Atk +1".
-    const plusBtn = screen.getByRole('button', { name: /Atk \+1/i });
-    await userEvent.click(plusBtn);
+    // Earthquake is physical → bump attacker's Atk stage by clicking the first "Atk +1" (attacker side).
+    const plusBtns = screen.getAllByRole('button', { name: /Atk \+1/i });
+    await userEvent.click(plusBtns[0]);
 
     await waitFor(() => {
       const firstPctAfter = screen.getAllByText(/^\d+(?:\.\d+)?%/)[0].textContent;

@@ -7,29 +7,31 @@ import type { StatStages } from '@/lib/calc';
 
 const ZERO: StatStages = { attack: 0, defense: 0, special_attack: 0, special_defense: 0 };
 
-function renderRow(props: { side: 'attacker' | 'defender'; stages?: StatStages; onChange?: (stat: keyof StatStages, value: number) => void }) {
+function renderRow(props: { side?: 'attacker' | 'defender'; stages?: StatStages; onChange?: (stat: keyof StatStages, value: number) => void }) {
   const onChange = props.onChange ?? vi.fn();
   return {
     onChange,
     ...render(
       <LocaleProvider>
-        <StatStageRow side={props.side} stages={props.stages ?? ZERO} onChange={onChange} />
+        <StatStageRow stages={props.stages ?? ZERO} onChange={onChange} />
       </LocaleProvider>,
     ),
   };
 }
 
 describe('StatStageRow', () => {
-  it('renders attacker side with Atk and SpA steppers', () => {
+  it('attacker side renders all four stat steppers', () => {
     renderRow({ side: 'attacker' });
-    expect(screen.getByRole('button', { name: 'Atk +1' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'SpA +1' })).toBeInTheDocument();
+    for (const label of ['Atk', 'Def', 'SpA', 'SpD']) {
+      expect(screen.getByRole('button', { name: new RegExp(`${label} \\+1`, 'i') })).toBeTruthy();
+    }
   });
 
-  it('renders defender side with Def and SpD steppers', () => {
+  it('defender side renders all four stat steppers', () => {
     renderRow({ side: 'defender' });
-    expect(screen.getByRole('button', { name: 'Def +1' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'SpD +1' })).toBeInTheDocument();
+    for (const label of ['Atk', 'Def', 'SpA', 'SpD']) {
+      expect(screen.getByRole('button', { name: new RegExp(`${label} \\+1`, 'i') })).toBeTruthy();
+    }
   });
 
   it('+ button calls onChange with value+1', async () => {
@@ -66,21 +68,21 @@ describe('StatStageRow', () => {
   it('displays signed value correctly for positive, zero, and negative stages', () => {
     const { rerender } = render(
       <LocaleProvider>
-        <StatStageRow side="attacker" stages={{ ...ZERO, attack: 2 }} onChange={vi.fn()} />
+        <StatStageRow stages={{ ...ZERO, attack: 2 }} onChange={vi.fn()} />
       </LocaleProvider>,
     );
     expect(screen.getByRole('button', { name: 'Atk Reset' })).toHaveTextContent('+2');
 
     rerender(
       <LocaleProvider>
-        <StatStageRow side="attacker" stages={{ ...ZERO, attack: 0 }} onChange={vi.fn()} />
+        <StatStageRow stages={{ ...ZERO, attack: 0 }} onChange={vi.fn()} />
       </LocaleProvider>,
     );
     expect(screen.getByRole('button', { name: 'Atk Reset' })).toHaveTextContent('0');
 
     rerender(
       <LocaleProvider>
-        <StatStageRow side="attacker" stages={{ ...ZERO, attack: -3 }} onChange={vi.fn()} />
+        <StatStageRow stages={{ ...ZERO, attack: -3 }} onChange={vi.fn()} />
       </LocaleProvider>,
     );
     // Component uses Unicode minus U+2212 (−) for negative values
