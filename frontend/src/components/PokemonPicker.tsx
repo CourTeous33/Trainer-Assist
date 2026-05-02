@@ -16,23 +16,37 @@ interface Props {
 export default function PokemonPicker({ allTypes, onSelect }: Props) {
   const { locale, t } = useLocale();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [fetched, setFetched] = useState<PokemonSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
-  const active = !!(debouncedSearch || typeFilter);
+  const active = !!(debouncedSearch || typeFilters.length > 0);
   const results = active ? fetched : [];
 
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
     setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- show loading before async fetch
-    getPokemonList({ search: debouncedSearch || undefined, type: typeFilter ?? undefined, limit: 20 })
+    getPokemonList({
+      search: debouncedSearch || undefined,
+      type: typeFilters[0],
+      type2: typeFilters[1],
+      limit: 50,
+    })
       .then((res) => { if (!cancelled) setFetched(res.items); })
       .catch(() => { if (!cancelled) setFetched([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [active, debouncedSearch, typeFilter]);
+  }, [active, debouncedSearch, typeFilters]);
+
+  const toggleType = (name: string) => {
+    setTypeFilters((prev) => {
+      if (prev.includes(name)) return prev.filter((n) => n !== name);
+      if (prev.length < 2) return [...prev, name];
+      // Rotate: drop oldest, append new.
+      return [prev[1], name];
+    });
+  };
 
   return (
     <div className="space-y-2">
@@ -44,15 +58,19 @@ export default function PokemonPicker({ allTypes, onSelect }: Props) {
         className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
       />
       <div className="flex flex-wrap gap-1">
-        {allTypes.map((tt) => (
-          <button
-            key={tt.id} type="button"
-            onClick={() => setTypeFilter(typeFilter === tt.name ? null : tt.name)}
-            className={`transition-opacity ${typeFilter && typeFilter !== tt.name ? 'opacity-30' : ''}`}
-          >
-            <TypeBadge name={tt.name} names={tt.names} size="sm" />
-          </button>
-        ))}
+        {allTypes.map((tt) => {
+          const selected = typeFilters.includes(tt.name);
+          const dim = typeFilters.length > 0 && !selected;
+          return (
+            <button
+              key={tt.id} type="button"
+              onClick={() => toggleType(tt.name)}
+              className={`transition-opacity ${dim ? 'opacity-30' : ''}`}
+            >
+              <TypeBadge name={tt.name} names={tt.names} size="sm" />
+            </button>
+          );
+        })}
       </div>
       <div className="max-h-64 overflow-y-auto space-y-1">
         {loading && <div className="text-sm text-gray-500">…</div>}
