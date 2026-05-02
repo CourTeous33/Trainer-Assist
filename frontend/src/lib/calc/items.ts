@@ -27,6 +27,28 @@ export const ITEMS: Item[] = [
   { id: 'black-glasses',  names: { en: 'Black Glasses',  ja: 'くろいメガネ',     zh: '黑色眼镜' }, tier: 'type-boost', typeBoost: { typeId: 17, factor: 1.2 } },
   { id: 'pixie-plate',    names: { en: 'Pixie Plate',    ja: 'せいれいプレート', zh: '妖精石板' }, tier: 'type-boost', typeBoost: { typeId: 18, factor: 1.2 } },
 
+  // Resistance berries — defender-side held items that halve damage from a type-matched move.
+  // Super-effective resist berries (17): trigger only when typeEff > 1.
+  { id: 'chople-berry', names: { en: 'Chople Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 2, factor: 0.5, requireSuperEffective: true } },
+  { id: 'coba-berry',   names: { en: 'Coba Berry' },   tier: 'resist-berry', defenderResistance: { typeId: 3, factor: 0.5, requireSuperEffective: true } },
+  { id: 'kebia-berry',  names: { en: 'Kebia Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 4, factor: 0.5, requireSuperEffective: true } },
+  { id: 'shuca-berry',  names: { en: 'Shuca Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 5, factor: 0.5, requireSuperEffective: true } },
+  { id: 'charti-berry', names: { en: 'Charti Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 6, factor: 0.5, requireSuperEffective: true } },
+  { id: 'tanga-berry',  names: { en: 'Tanga Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 7, factor: 0.5, requireSuperEffective: true } },
+  { id: 'kasib-berry',  names: { en: 'Kasib Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 8, factor: 0.5, requireSuperEffective: true } },
+  { id: 'babiri-berry', names: { en: 'Babiri Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 9, factor: 0.5, requireSuperEffective: true } },
+  { id: 'occa-berry',   names: { en: 'Occa Berry' },   tier: 'resist-berry', defenderResistance: { typeId: 10, factor: 0.5, requireSuperEffective: true } },
+  { id: 'passho-berry', names: { en: 'Passho Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 11, factor: 0.5, requireSuperEffective: true } },
+  { id: 'rindo-berry',  names: { en: 'Rindo Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 12, factor: 0.5, requireSuperEffective: true } },
+  { id: 'wacan-berry',  names: { en: 'Wacan Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 13, factor: 0.5, requireSuperEffective: true } },
+  { id: 'payapa-berry', names: { en: 'Payapa Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 14, factor: 0.5, requireSuperEffective: true } },
+  { id: 'yache-berry',  names: { en: 'Yache Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 15, factor: 0.5, requireSuperEffective: true } },
+  { id: 'haban-berry',  names: { en: 'Haban Berry' },  tier: 'resist-berry', defenderResistance: { typeId: 16, factor: 0.5, requireSuperEffective: true } },
+  { id: 'colbur-berry', names: { en: 'Colbur Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 17, factor: 0.5, requireSuperEffective: true } },
+  { id: 'roseli-berry', names: { en: 'Roseli Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 18, factor: 0.5, requireSuperEffective: true } },
+  // Chilan: halves Normal moves regardless of effectiveness.
+  { id: 'chilan-berry', names: { en: 'Chilan Berry' }, tier: 'resist-berry', defenderResistance: { typeId: 1, factor: 0.5, requireSuperEffective: false } },
+
   { id: 'light-ball', names: { en: 'Light Ball', ja: 'でんきだま',     zh: '电气球' }, tier: 'other',
     attackMult: { stat: 'attack', factor: 2.0 },
     speciesGate: [25],
