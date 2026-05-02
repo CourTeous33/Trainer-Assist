@@ -3,6 +3,22 @@ import { computeAllStats, stageMultiplier } from './stats';
 import { getNature } from './natures';
 import { getItem } from './items';
 
+type StatPickKey = 'attack' | 'defense' | 'special_attack' | 'special_defense';
+
+interface MoveStatOverride {
+  offenseSide?: 'attacker' | 'defender';
+  offenseKey?: StatPickKey;
+  defenseKey?: StatPickKey;
+}
+
+const MOVE_STAT_OVERRIDES: Record<string, MoveStatOverride> = {
+  'body-press':   { offenseKey: 'defense' },
+  'foul-play':    { offenseSide: 'defender', offenseKey: 'attack' },
+  'psyshock':     { defenseKey: 'defense' },
+  'psystrike':    { defenseKey: 'defense' },
+  'secret-sword': { defenseKey: 'defense' },
+};
+
 const FIXED_DAMAGE_MOVES = new Set([
   'seismic-toss', 'night-shade', 'dragon-rage', 'sonic-boom', 'super-fang',
   'endeavor', 'final-gambit', 'psywave',
@@ -48,19 +64,24 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   const dStats = computeAllStats(dBase, defender.ivs, defender.evs, defender.level, getNature(defender.nature));
 
   const isPhysical = move.damage_class === 'physical';
-  let A = isPhysical ? aStats.attack : aStats.special_attack;
-  let D = isPhysical ? dStats.defense : dStats.special_defense;
+  const ovr = MOVE_STAT_OVERRIDES[move.name];
+  const offenseSide = ovr?.offenseSide ?? 'attacker';
+  const offenseKey: StatPickKey = ovr?.offenseKey ?? (isPhysical ? 'attack' : 'special_attack');
+  const defenseKey: StatPickKey = ovr?.defenseKey ?? (isPhysical ? 'defense' : 'special_defense');
+  const offenseStats = offenseSide === 'attacker' ? aStats : dStats;
+  const offenseStages = offenseSide === 'attacker' ? attacker.stages : defender.stages;
+  let A = offenseStats[offenseKey];
+  let D = dStats[defenseKey];
 
   let itemMultDamage = 1.0;
   const item = attacker.itemId ? getItem(attacker.itemId) : undefined;
   const speciesOk = !item || !item.speciesGate || item.speciesGate.includes(attacker.pokemonId);
 
   if (item && speciesOk) {
-    if (item.attackMult) {
-      if (item.id === 'light-ball') {
+    if (item.attackMult && offenseSide === 'attacker') {
+      if (item.id === 'light-ball' && offenseKey === 'attack') {
         A = Math.floor(A * 2);
-      } else if ((item.attackMult.stat === 'attack' && isPhysical) ||
-                 (item.attackMult.stat === 'special_attack' && !isPhysical)) {
+      } else if (item.attackMult.stat === offenseKey) {
         A = Math.floor(A * item.attackMult.factor);
       }
     }
@@ -77,10 +98,8 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   }
 
   // Stages applied after item mults (commutative under multiplication; sub-1% drift from Showdown's stage-first ordering due to Math.floor between steps).
-  const aStageKey = isPhysical ? 'attack' : 'special_attack';
-  const dStageKey = isPhysical ? 'defense' : 'special_defense';
-  A = Math.floor(A * stageMultiplier(attacker.stages[aStageKey]));
-  D = Math.floor(D * stageMultiplier(defender.stages[dStageKey]));
+  A = Math.floor(A * stageMultiplier(offenseStages[offenseKey]));
+  D = Math.floor(D * stageMultiplier(defender.stages[defenseKey]));
 
   let typeEff = 1.0;
   for (const dType of dTypes) {
