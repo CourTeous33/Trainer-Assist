@@ -19,3 +19,6 @@ pgdata/
 
 # OS files
 .DS_Store
+
+# Local-only deploy notes (host-specific, may reference secrets)
+deploy.md
