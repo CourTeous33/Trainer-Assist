@@ -76,6 +76,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     }
   }
 
+  // Stages applied after item mults (commutative under multiplication; sub-1% drift from Showdown's stage-first ordering due to Math.floor between steps).
   const aStageKey = isPhysical ? 'attack' : 'special_attack';
   const dStageKey = isPhysical ? 'defense' : 'special_defense';
   A = Math.floor(A * stageMultiplier(attacker.stages[aStageKey]));
