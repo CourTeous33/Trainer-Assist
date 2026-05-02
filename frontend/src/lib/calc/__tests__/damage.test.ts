@@ -188,4 +188,85 @@ describe('calculateDamage', () => {
     expect(irrelevant.defenderStat).toBe(baseline.defenderStat);
     expect(irrelevant.rolls).toEqual(baseline.rolls);
   });
+
+  it('Chople Berry halves super-effective Fighting damage', () => {
+    const eff = identityEfficacy();
+    eff[2][1] = 200; // Fighting super-effective vs Normal
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const noBerry = calculateDamage(input({
+      defenderSpecies: { types: [1], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
+      typeEfficacy: eff,
+      move: fightingMove,
+    })) as { rolls: number[]; modifiers: { berry: number } };
+    const withBerry = calculateDamage(input({
+      defenderSpecies: { types: [1], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
+      typeEfficacy: eff,
+      move: fightingMove,
+      defender: { ...input({}).defender, itemId: 'chople-berry' },
+    })) as { rolls: number[]; modifiers: { berry: number } };
+    expect(withBerry.modifiers.berry).toBe(0.5);
+    expect(noBerry.modifiers.berry).toBe(1);
+    for (let i = 0; i < 16; i++) {
+      expect(withBerry.rolls[i]).toBeGreaterThanOrEqual(Math.floor(noBerry.rolls[i] * 0.5) - 1);
+      expect(withBerry.rolls[i]).toBeLessThanOrEqual(Math.floor(noBerry.rolls[i] * 0.5) + 1);
+    }
+  });
+
+  it('Chople Berry does NOT apply to a not-very-effective Fighting move', () => {
+    const eff = identityEfficacy();
+    eff[2][14] = 50; // Fighting not-very-effective vs Psychic
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const out = calculateDamage(input({
+      defenderSpecies: { types: [14], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
+      typeEfficacy: eff,
+      move: fightingMove,
+      defender: { ...input({}).defender, itemId: 'chople-berry' },
+    })) as { modifiers: { berry: number } };
+    expect(out.modifiers.berry).toBe(1);
+  });
+
+  it('Chople Berry does NOT apply to non-Fighting super-effective move', () => {
+    const eff = identityEfficacy();
+    eff[10][7] = 200; // Fire super-effective vs Bug
+    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const };
+    const out = calculateDamage(input({
+      defenderSpecies: { types: [7], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
+      typeEfficacy: eff,
+      move: fireMove,
+      defender: { ...input({}).defender, itemId: 'chople-berry' },
+    })) as { modifiers: { berry: number } };
+    expect(out.modifiers.berry).toBe(1);
+  });
+
+  it('Chilan Berry halves Normal moves regardless of effectiveness', () => {
+    const normalMove = { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: 40, accuracy: 100, pp: 35, damage_class: 'physical' as const };
+    const neutral = calculateDamage(input({
+      move: normalMove,
+      defender: { ...input({}).defender, itemId: 'chilan-berry' },
+    })) as { modifiers: { berry: number } };
+    expect(neutral.modifiers.berry).toBe(0.5);
+  });
+
+  it('Chilan Berry does NOT apply to non-Normal moves', () => {
+    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const };
+    const out = calculateDamage(input({
+      move: fireMove,
+      defender: { ...input({}).defender, itemId: 'chilan-berry' },
+    })) as { modifiers: { berry: number } };
+    expect(out.modifiers.berry).toBe(1);
+  });
+
+  it('Choice Band on attacker composes with Chople on defender', () => {
+    const eff = identityEfficacy();
+    eff[2][1] = 200; // Fighting super-effective vs Normal
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const out = calculateDamage(input({
+      defenderSpecies: { types: [1], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
+      typeEfficacy: eff,
+      move: fightingMove,
+      attacker: { ...input({}).attacker, itemId: 'choice-band' },
+      defender: { ...input({}).defender, itemId: 'chople-berry' },
+    })) as { modifiers: { berry: number } };
+    expect(out.modifiers.berry).toBe(0.5);
+  });
 });

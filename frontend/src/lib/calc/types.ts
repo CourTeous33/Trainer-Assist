@@ -83,7 +83,7 @@ export interface CalcResult {
   twoHkoPct: number;
   threeHkoPct: number;
   qualifier: string;
-  modifiers: { stab: number; typeEff: number; item: number };
+  modifiers: { stab: number; typeEff: number; item: number; berry: number };
   attackerStat: number;
   defenderStat: number;
 }

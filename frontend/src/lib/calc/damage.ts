@@ -92,6 +92,17 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     itemMultDamage *= item.superEffectiveMult;
   }
 
+  let berryMultDamage = 1.0;
+  const defenderItem = defender.itemId ? getItem(defender.itemId) : undefined;
+  if (defenderItem?.defenderResistance) {
+    const r = defenderItem.defenderResistance;
+    const matchesType = move.type_ref.id === r.typeId;
+    const meetsThreshold = !r.requireSuperEffective || typeEff > 1;
+    if (matchesType && meetsThreshold) {
+      berryMultDamage *= r.factor;
+    }
+  }
+
   const stab = aTypes.includes(move.type_ref.id) ? 1.5 : 1.0;
 
   const L = attacker.level;
@@ -102,7 +113,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   const rolls: number[] = [];
   for (let i = 85; i <= 100; i++) {
     const roll = i / 100;
-    const dmg = typeEff === 0 ? 0 : Math.floor(baseDamage * stab * typeEff * itemMultDamage * roll);
+    const dmg = typeEff === 0 ? 0 : Math.floor(baseDamage * stab * typeEff * itemMultDamage * berryMultDamage * roll);
     rolls.push(dmg);
   }
 
@@ -121,7 +132,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     twoHkoPct: 0,
     threeHkoPct: 0,
     qualifier: '',
-    modifiers: { stab, typeEff, item: itemMultDamage },
+    modifiers: { stab, typeEff, item: itemMultDamage, berry: berryMultDamage },
     attackerStat: A,
     defenderStat: D,
   };
