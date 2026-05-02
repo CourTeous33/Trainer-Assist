@@ -18,7 +18,7 @@ export interface Nature {
   lowered: StatKey | null;
 }
 
-export type ItemTier = 'top' | 'type-boost' | 'other';
+export type ItemTier = 'top' | 'type-boost' | 'resist-berry' | 'other';
 
 export interface Item {
   id: string;
@@ -28,9 +28,21 @@ export interface Item {
   attackMult?: { stat: 'attack' | 'special_attack'; factor: number };
   typeBoost?: { typeId: number; factor: number };
   superEffectiveMult?: number;
+  defenderResistance?: { typeId: number; factor: number; requireSuperEffective: boolean };
   speciesGate?: number[];
   speciesGateNote?: string;
 }
+
+export interface StatStages {
+  attack: number;
+  defense: number;
+  special_attack: number;
+  special_defense: number;
+}
+
+export const ZERO_STAGES: StatStages = {
+  attack: 0, defense: 0, special_attack: 0, special_defense: 0,
+};
 
 export interface PokemonConfig {
   pokemonId: number;
@@ -41,6 +53,7 @@ export interface PokemonConfig {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  stages: StatStages;
 }
 
 export interface CalcInput {
@@ -70,7 +83,7 @@ export interface CalcResult {
   twoHkoPct: number;
   threeHkoPct: number;
   qualifier: string;
-  modifiers: { stab: number; typeEff: number; item: number };
+  modifiers: { stab: number; typeEff: number; item: number; berry: number };
   attackerStat: number;
   defenderStat: number;
 }

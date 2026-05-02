@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   defaultCalcState, calculate, serializeState, deserializeState,
   clampEVsForMode, convertEVsBetweenModes, lockedIVsForMode, lockedLevelForMode,
-  type CalcState, type CalcInput, type EVMode, type NatureId,
+  type CalcState, type CalcInput, type EVMode, type NatureId, type StatStages,
 } from '@/lib/calc';
 import type { PokemonDetail, PokemonSummary, MoveSummary, TypeRef, TypeEfficacy, Stats } from '@/lib/types';
 import { getPokemon, getPokemonList, getTypes, getTypeEfficacy, getMoves } from '@/lib/api';
@@ -18,6 +18,7 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import EVStatTable from '@/components/EVStatTable';
 import NatureDropdown from '@/components/NatureDropdown';
 import ItemDropdown from '@/components/ItemDropdown';
+import StatStageRow from '@/components/StatStageRow';
 import BaseStatOverridePanel from '@/components/BaseStatOverridePanel';
 import PokemonPicker from '@/components/PokemonPicker';
 import MoveSlot from '@/components/MoveSlot';
@@ -42,6 +43,8 @@ type Action =
   | { type: 'SET_DEFENDER_ITEM'; itemId: string | null }
   | { type: 'SET_ATTACKER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_DEFENDER_OVERRIDE'; base: Stats | null; types: number[] | null }
+  | { type: 'SET_ATTACKER_STAGE'; stat: keyof StatStages; value: number }
+  | { type: 'SET_DEFENDER_STAGE'; stat: keyof StatStages; value: number }
   | { type: 'SET_MOVE'; slot: 0 | 1 | 2 | 3; moveId: number | null }
   | { type: 'HYDRATE'; state: CalcState };
 
@@ -77,6 +80,14 @@ function calcReducer(state: CalcState, action: Action): CalcState {
     case 'SET_DEFENDER_ITEM':    return { ...state, defender: { ...state.defender, itemId: action.itemId } };
     case 'SET_ATTACKER_OVERRIDE': return { ...state, attacker: { ...state.attacker, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_DEFENDER_OVERRIDE': return { ...state, defender: { ...state.defender, baseStatsOverride: action.base, typesOverride: action.types } };
+    case 'SET_ATTACKER_STAGE': {
+      const clamped = Math.max(-6, Math.min(6, Math.floor(action.value)));
+      return { ...state, attacker: { ...state.attacker, stages: { ...state.attacker.stages, [action.stat]: clamped } } };
+    }
+    case 'SET_DEFENDER_STAGE': {
+      const clamped = Math.max(-6, Math.min(6, Math.floor(action.value)));
+      return { ...state, defender: { ...state.defender, stages: { ...state.defender.stages, [action.stat]: clamped } } };
+    }
     case 'SET_MOVE': {
       const moves = [...state.attacker.moveIds] as CalcState['attacker']['moveIds'];
       moves[action.slot] = action.moveId;
@@ -348,6 +359,11 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
   const setItem = (i: string | null) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_ITEM' : 'SET_DEFENDER_ITEM', itemId: i });
   const setOver = (base: Stats | null, types: number[] | null) =>
     dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_OVERRIDE' : 'SET_DEFENDER_OVERRIDE', base, types });
+  const setStage = (stat: keyof StatStages, value: number) => dispatch(
+    side === 'attacker'
+      ? { type: 'SET_ATTACKER_STAGE', stat, value }
+      : { type: 'SET_DEFENDER_STAGE', stat, value },
+  );
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-3">
       <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</div>
@@ -397,6 +413,7 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
         <NatureDropdown value={cfg.nature} onChange={setNat} />
         <ItemDropdown value={cfg.itemId} onChange={setItem} />
       </div>
+      <StatStageRow side={side} stages={cfg.stages} onChange={setStage} />
       <EVStatTable
         mode={state.evMode}
         base={cfg.baseStatsOverride ?? detail.stats}

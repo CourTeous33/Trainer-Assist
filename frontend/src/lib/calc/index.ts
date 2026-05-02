@@ -7,7 +7,7 @@ export { NATURES, getNature, NATURE_MULTIPLIER } from './natures';
 export { ITEMS, ITEMS_BY_TIER, getItem } from './items';
 export {
   computeStat, computeAllStats, clampEVsForMode, convertEVsBetweenModes, evTotal,
-  isLevelLockedForMode, lockedLevelForMode, lockedIVsForMode,
+  isLevelLockedForMode, lockedLevelForMode, lockedIVsForMode, stageMultiplier,
   MAX_TOTAL_EV_TRADITIONAL, MAX_PER_STAT_EV_TRADITIONAL,
   MAX_TOTAL_EV_CHAMPION, MAX_PER_STAT_EV_CHAMPION,
 } from './stats';

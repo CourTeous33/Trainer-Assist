@@ -13,7 +13,7 @@ describe('ITEMS', () => {
 
   it('every item has at least one multiplier defined', () => {
     for (const item of ITEMS) {
-      const hasMult = item.damageMult || item.attackMult || item.typeBoost || item.superEffectiveMult;
+      const hasMult = item.damageMult || item.attackMult || item.typeBoost || item.superEffectiveMult || item.defenderResistance;
       expect(hasMult, `${item.id} has no multiplier`).toBeTruthy();
     }
   });
@@ -39,6 +39,20 @@ describe('ITEMS', () => {
 
   it('Light Ball is gated to Pikachu species', () => {
     expect(getItem('light-ball')!.speciesGate).toContain(25);
+  });
+
+  it('groups resist berries into resist-berry tier', () => {
+    expect(ITEMS_BY_TIER['resist-berry'].length).toBe(18);
+  });
+
+  it('Chople Berry resists super-effective Fighting (typeId 2)', () => {
+    const chople = getItem('chople-berry');
+    expect(chople?.defenderResistance).toEqual({ typeId: 2, factor: 0.5, requireSuperEffective: true });
+  });
+
+  it('Chilan Berry resists Normal (typeId 1) regardless of effectiveness', () => {
+    const chilan = getItem('chilan-berry');
+    expect(chilan?.defenderResistance).toEqual({ typeId: 1, factor: 0.5, requireSuperEffective: false });
   });
 });
 

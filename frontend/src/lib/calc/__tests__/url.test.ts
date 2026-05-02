@@ -74,4 +74,50 @@ describe('url serialization', () => {
     const json = JSON.parse(atob(blob));
     expect(json.v).toBe(1);
   });
+
+  it('roundtrips non-zero stages', () => {
+    const base = defaultCalcState();
+    const s: CalcState = {
+      ...base,
+      attacker: { ...base.attacker, stages: { attack: 0, defense: 0, special_attack: 2, special_defense: 0 } },
+      defender: { ...base.defender, stages: { attack: 0, defense: 0, special_attack: 0, special_defense: 1 } },
+    };
+    expect(deserializeState(serializeState(s))).toEqual(s);
+  });
+
+  it('legacy URL without `st` unpacks to zero stages', () => {
+    const legacy = btoa(JSON.stringify({
+      v: 1, m: 't',
+      a: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null, mv: [null, null, null, null] },
+      d: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null },
+    }));
+    const s = deserializeState(legacy);
+    expect(s.attacker.stages).toEqual({ attack: 0, defense: 0, special_attack: 0, special_defense: 0 });
+    expect(s.defender.stages).toEqual({ attack: 0, defense: 0, special_attack: 0, special_defense: 0 });
+  });
+
+  it('clamps stage values outside [-6, 6] on deserialize', () => {
+    const blob = btoa(JSON.stringify({
+      v: 1, m: 't',
+      a: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null, mv: [null, null, null, null],
+        st: { attack: 99, defense: -99, special_attack: 7, special_defense: -8 } },
+      d: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null,
+        st: { attack: 0, defense: 0, special_attack: 0, special_defense: 0 } },
+    }));
+    const s = deserializeState(blob);
+    expect(s.attacker.stages).toEqual({ attack: 6, defense: -6, special_attack: 6, special_defense: -6 });
+    expect(s.defender.stages).toEqual({ attack: 0, defense: 0, special_attack: 0, special_defense: 0 });
+  });
 });

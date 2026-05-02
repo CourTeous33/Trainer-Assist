@@ -1,5 +1,5 @@
 import type { CalcInput, CalcOutcome, CalcResult, UnsupportedResult, UnsupportedReason } from './types';
-import { computeAllStats } from './stats';
+import { computeAllStats, stageMultiplier } from './stats';
 import { getNature } from './natures';
 import { getItem } from './items';
 
@@ -49,7 +49,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
 
   const isPhysical = move.damage_class === 'physical';
   let A = isPhysical ? aStats.attack : aStats.special_attack;
-  const D = isPhysical ? dStats.defense : dStats.special_defense;
+  let D = isPhysical ? dStats.defense : dStats.special_defense;
 
   let itemMultDamage = 1.0;
   const item = attacker.itemId ? getItem(attacker.itemId) : undefined;
@@ -76,6 +76,12 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     }
   }
 
+  // Stages applied after item mults (commutative under multiplication; sub-1% drift from Showdown's stage-first ordering due to Math.floor between steps).
+  const aStageKey = isPhysical ? 'attack' : 'special_attack';
+  const dStageKey = isPhysical ? 'defense' : 'special_defense';
+  A = Math.floor(A * stageMultiplier(attacker.stages[aStageKey]));
+  D = Math.floor(D * stageMultiplier(defender.stages[dStageKey]));
+
   let typeEff = 1.0;
   for (const dType of dTypes) {
     const factor = (typeEfficacy[move.type_ref.id]?.[dType] ?? 100) / 100;
@@ -84,6 +90,17 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
 
   if (item && speciesOk && item.superEffectiveMult && typeEff > 1) {
     itemMultDamage *= item.superEffectiveMult;
+  }
+
+  let berryMultDamage = 1.0;
+  const defenderItem = defender.itemId ? getItem(defender.itemId) : undefined;
+  if (defenderItem?.defenderResistance) {
+    const r = defenderItem.defenderResistance;
+    const matchesType = move.type_ref.id === r.typeId;
+    const meetsThreshold = !r.requireSuperEffective || typeEff > 1;
+    if (matchesType && meetsThreshold) {
+      berryMultDamage *= r.factor;
+    }
   }
 
   const stab = aTypes.includes(move.type_ref.id) ? 1.5 : 1.0;
@@ -96,7 +113,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   const rolls: number[] = [];
   for (let i = 85; i <= 100; i++) {
     const roll = i / 100;
-    const dmg = typeEff === 0 ? 0 : Math.floor(baseDamage * stab * typeEff * itemMultDamage * roll);
+    const dmg = typeEff === 0 ? 0 : Math.floor(baseDamage * stab * typeEff * itemMultDamage * berryMultDamage * roll);
     rolls.push(dmg);
   }
 
@@ -115,7 +132,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     twoHkoPct: 0,
     threeHkoPct: 0,
     qualifier: '',
-    modifiers: { stab, typeEff, item: itemMultDamage },
+    modifiers: { stab, typeEff, item: itemMultDamage, berry: berryMultDamage },
     attackerStat: A,
     defenderStat: D,
   };

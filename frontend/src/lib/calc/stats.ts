@@ -100,3 +100,8 @@ export function lockedIVsForMode(mode: EVMode): Stats | null {
     ? { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 }
     : null;
 }
+
+export function stageMultiplier(n: number): number {
+  const c = Math.max(-6, Math.min(6, n));
+  return c >= 0 ? (2 + c) / 2 : 2 / (2 + -c);
+}
