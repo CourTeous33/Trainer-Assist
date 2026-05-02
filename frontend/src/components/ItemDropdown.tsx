@@ -27,6 +27,11 @@ export default function ItemDropdown({ value, onChange }: Props) {
           <option key={i.id} value={i.id}>{localizedName(i.names, locale)}</option>
         ))}
       </optgroup>
+      <optgroup label={t('calc.itemTier.resistBerry')}>
+        {ITEMS_BY_TIER['resist-berry'].map((i) => (
+          <option key={i.id} value={i.id}>{localizedName(i.names, locale)}</option>
+        ))}
+      </optgroup>
       <optgroup label={t('calc.itemTier.other')}>
         {ITEMS_BY_TIER.other.map((i) => (
           <option key={i.id} value={i.id}>{localizedName(i.names, locale)}</option>
