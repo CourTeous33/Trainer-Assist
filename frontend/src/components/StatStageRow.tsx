@@ -23,7 +23,7 @@ export default function StatStageRow({ stages, onChange }: Props) {
       <span className="uppercase tracking-wide text-gray-500 dark:text-gray-400">
         {t('calc.stages.label')}
       </span>
-      <div className="flex flex-1 gap-3 flex-wrap">
+      <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-2">
         {STAGE_KEYS.map(({ stat, tKey }) => {
           const value = stages[stat];
           const display = value > 0 ? `+${value}` : value < 0 ? `−${-value}` : '0';
