@@ -41,6 +41,8 @@ type Action =
   | { type: 'SET_DEFENDER_NATURE'; nature: NatureId }
   | { type: 'SET_ATTACKER_ITEM'; itemId: string | null }
   | { type: 'SET_DEFENDER_ITEM'; itemId: string | null }
+  | { type: 'SET_ATTACKER_ABILITY'; abilityId: string | null }
+  | { type: 'SET_DEFENDER_ABILITY'; abilityId: string | null }
   | { type: 'SET_ATTACKER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_DEFENDER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_ATTACKER_STAGE'; stat: keyof StatStages; value: number }
@@ -78,6 +80,8 @@ function calcReducer(state: CalcState, action: Action): CalcState {
     case 'SET_DEFENDER_NATURE':  return { ...state, defender: { ...state.defender, nature: action.nature } };
     case 'SET_ATTACKER_ITEM':    return { ...state, attacker: { ...state.attacker, itemId: action.itemId } };
     case 'SET_DEFENDER_ITEM':    return { ...state, defender: { ...state.defender, itemId: action.itemId } };
+    case 'SET_ATTACKER_ABILITY': return { ...state, attacker: { ...state.attacker, abilityId: action.abilityId } };
+    case 'SET_DEFENDER_ABILITY': return { ...state, defender: { ...state.defender, abilityId: action.abilityId } };
     case 'SET_ATTACKER_OVERRIDE': return { ...state, attacker: { ...state.attacker, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_DEFENDER_OVERRIDE': return { ...state, defender: { ...state.defender, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_ATTACKER_STAGE': {
