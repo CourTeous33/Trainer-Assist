@@ -53,6 +53,7 @@ export interface PokemonConfig {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  abilityId: string | null;
   stages: StatStages;
 }
 

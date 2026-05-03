@@ -18,6 +18,7 @@ export interface DefenderState {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  abilityId: string | null;
   stages: StatStages;
 }
 
@@ -36,14 +37,14 @@ export function defaultCalcState(): CalcState {
     attacker: {
       pokemonId: DEFAULT_ATTACKER_ID,
       baseStatsOverride: null, typesOverride: null,
-      level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null,
+      level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null, abilityId: null,
       stages: { ...ZERO_STAGES },
       moveIds: [null, null, null, null],
     },
     defender: {
       pokemonId: DEFAULT_DEFENDER_ID,
       baseStatsOverride: null, typesOverride: null,
-      level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null,
+      level: 50, ivs: { ...max31 }, evs: { ...zero }, nature: 'hardy', itemId: null, abilityId: null,
       stages: { ...ZERO_STAGES },
     },
   };
@@ -89,6 +90,7 @@ function packSide(side: AttackerState | DefenderState, isAttacker: boolean): Rec
     i: side.ivs,
     n: side.nature,
     it: side.itemId,
+    ab: side.abilityId,
     bso: side.baseStatsOverride,
     to: side.typesOverride,
     st: side.stages,
@@ -108,12 +110,13 @@ function unpackSide(raw: unknown, isAttacker: boolean, mode: EVMode): AttackerSt
   const nature = isNatureId(r.n) ? r.n : 'hardy';
   const pokemonId = Math.max(1, Math.floor(Number(r.p) || 1));
   const itemId = typeof r.it === 'string' ? r.it : null;
+  const abilityId = typeof r.ab === 'string' ? r.ab : null;
   const baseStatsOverride = r.bso ? clampStats(r.bso, 999) : null;
   const typesOverride = Array.isArray(r.to)
     ? (r.to as unknown[]).slice(0, 2).map((x) => Math.max(1, Math.floor(Number(x) || 1)))
     : null;
   const stages = clampStages(r.st);
-  const side: DefenderState = { pokemonId, level, ivs, evs: evsClamped, nature, itemId, baseStatsOverride, typesOverride, stages };
+  const side: DefenderState = { pokemonId, level, ivs, evs: evsClamped, nature, itemId, abilityId, baseStatsOverride, typesOverride, stages };
   if (isAttacker) {
     const mv = Array.isArray(r.mv) ? r.mv : [];
     const moveIds: AttackerState['moveIds'] = [

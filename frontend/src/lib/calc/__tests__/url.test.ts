@@ -120,4 +120,43 @@ describe('url serialization', () => {
     expect(s.attacker.stages).toEqual({ attack: 6, defense: -6, special_attack: 6, special_defense: -6 });
     expect(s.defender.stages).toEqual({ attack: 0, defense: 0, special_attack: 0, special_defense: 0 });
   });
+
+  it('roundtrips abilityId on both sides', () => {
+    const base = defaultCalcState();
+    const s: CalcState = {
+      ...base,
+      attacker: { ...base.attacker, abilityId: 'tough-claws' },
+      defender: { ...base.defender, abilityId: 'levitate' },
+    };
+    const round = deserializeState(serializeState(s));
+    expect(round.attacker.abilityId).toBe('tough-claws');
+    expect(round.defender.abilityId).toBe('levitate');
+  });
+
+  it('treats missing ab field as null (backward compat)', () => {
+    const old = btoa(JSON.stringify({
+      v: 1, m: 't',
+      a: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null, mv: [null, null, null, null] },
+      d: { p: 1, l: 50,
+        e: { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
+        i: { hp: 31, attack: 31, defense: 31, special_attack: 31, special_defense: 31, speed: 31 },
+        n: 'hardy', it: null },
+    }));
+    const s = deserializeState(old);
+    expect(s.attacker.abilityId).toBeNull();
+    expect(s.defender.abilityId).toBeNull();
+  });
+
+  it('preserves an unknown ability id string (no validation)', () => {
+    const base = defaultCalcState();
+    const s: CalcState = {
+      ...base,
+      attacker: { ...base.attacker, abilityId: 'not-a-real-ability' },
+    };
+    const round = deserializeState(serializeState(s));
+    expect(round.attacker.abilityId).toBe('not-a-real-ability');
+  });
 });
