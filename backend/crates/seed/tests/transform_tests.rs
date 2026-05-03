@@ -326,7 +326,9 @@ fn pokemon_has_abilities_with_descriptions() {
 
     let pikachu = result.pokemon_details.iter().find(|p| p.id == 25).unwrap();
     assert_eq!(pikachu.abilities.len(), 1);
-    assert_eq!(pikachu.abilities[0].name, "Static");
+    // `name` is the kebab-case slug from abilities.csv — the calc roster keys on this.
+    assert_eq!(pikachu.abilities[0].name, "static");
+    assert_eq!(pikachu.abilities[0].names.en, "Static");
     assert_eq!(pikachu.abilities[0].names.ja, Some("せいでんき".to_string()));
     // Should pick version_group_id 20 (highest), not 15
     assert!(pikachu.abilities[0].description.en.contains("paralysis"));

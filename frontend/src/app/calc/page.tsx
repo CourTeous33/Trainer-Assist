@@ -101,6 +101,14 @@ function calcReducer(state: CalcState, action: Action): CalcState {
   }
 }
 
+function pickDefaultAbilitySlug(detail: PokemonDetail | null, current: string | null): string | null {
+  if (!detail) return null;
+  const slugs = detail.abilities.map((a) => a.name);
+  if (current && slugs.includes(current)) return null;
+  const def = detail.abilities.find((a) => !a.is_hidden) ?? detail.abilities[0];
+  return def?.name ?? null;
+}
+
 function toEfficacyMatrix(rows: TypeEfficacy[]): number[][] {
   const max = Math.max(...rows.map((r) => Math.max(r.attacking_type_id, r.defending_type_id)), 18);
   const m: number[][] = Array.from({ length: max + 1 }, () => Array(max + 1).fill(100));
@@ -189,6 +197,24 @@ function CalcPageInner() {
       .catch(() => { if (!cancelled) setDefenderDetail(null); });
     return () => { cancelled = true; };
   }, [state.defender.pokemonId]);
+
+  // When the species changes, snap the ability to a non-hidden slot — unless the
+  // current selection is already valid (preserves URL hydration and explicit user
+  // clears via the "no ability" option). Intentionally do NOT depend on the
+  // current abilityId: re-running on user clear would defeat the clear.
+  useEffect(() => {
+    if (!hydrated) return;
+    const slug = pickDefaultAbilitySlug(attackerDetail, state.attacker.abilityId);
+    if (slug) dispatch({ type: 'SET_ATTACKER_ABILITY', abilityId: slug });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attackerDetail, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const slug = pickDefaultAbilitySlug(defenderDetail, state.defender.abilityId);
+    if (slug) dispatch({ type: 'SET_DEFENDER_ABILITY', abilityId: slug });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defenderDetail, hydrated]);
 
   const attackerMoves: MoveSummary[] = useMemo(() => {
     if (!attackerDetail) return [];

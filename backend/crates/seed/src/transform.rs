@@ -153,6 +153,14 @@ pub fn transform(data: &ParsedData) -> TransformedData {
         }
     }
 
+    // ability_id -> kebab-case slug (e.g. "mega-launcher"). Used as the stable
+    // identifier on AbilityInfo.name so the calc roster (keyed by slug) matches.
+    let ability_slug_map: HashMap<i32, String> = data
+        .abilities
+        .iter()
+        .map(|a| (a.id, a.identifier.clone()))
+        .collect();
+
     // ability_id -> English name
     let ability_name_map: HashMap<i32, String> = data
         .ability_names
@@ -202,14 +210,15 @@ pub fn transform(data: &ParsedData) -> TransformedData {
     // pokemon_id -> Vec<AbilityInfo> for abilities
     let mut pokemon_ability_map: HashMap<i32, Vec<AbilityInfo>> = HashMap::new();
     for pa in &data.pokemon_abilities {
-        if let Some(name) = ability_name_map.get(&pa.ability_id) {
+        if let Some(slug) = ability_slug_map.get(&pa.ability_id) {
+            let name_en = ability_name_map.get(&pa.ability_id).cloned().unwrap_or_else(|| slug.clone());
             pokemon_ability_map
                 .entry(pa.pokemon_id)
                 .or_default()
                 .push(AbilityInfo {
-                    name: name.clone(),
+                    name: slug.clone(),
                     names: localized_names(
-                        name.clone(),
+                        name_en,
                         ability_name_ja.get(&pa.ability_id).cloned(),
                         ability_name_zh.get(&pa.ability_id).cloned(),
                     ),

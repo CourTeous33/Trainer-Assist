@@ -23,7 +23,13 @@ vi.mock('@/lib/api', () => ({
     id, species_id: id, name: `mon-${id}`, names: { en: `Mon ${id}` }, species_names: { en: `Mon ${id}` },
     types: [{ id: 16, name: 'dragon', names: { en: 'Dragon' } }, { id: 5, name: 'ground', names: { en: 'Ground' } }],
     sprite_url: '/test.png', stats: { hp: 108, attack: 130, defense: 95, special_attack: 80, special_defense: 85, speed: 102 },
-    abilities: [], moves: [{ id: 89, name: 'earthquake', names: { en: 'Earthquake' } }], height: 1, weight: 1, generation: 4,
+    // 'overgrow' is not in the Bundle-A roster, so it auto-binds as a no-op default.
+    abilities: [
+      { name: 'overgrow', names: { en: 'Overgrow' }, description: { en: '' }, is_hidden: false },
+      { name: 'mold-breaker', names: { en: 'Mold Breaker' }, description: { en: '' }, is_hidden: false },
+      { name: 'levitate', names: { en: 'Levitate' }, description: { en: '' }, is_hidden: true },
+    ],
+    moves: [{ id: 89, name: 'earthquake', names: { en: 'Earthquake' } }], height: 1, weight: 1, generation: 4,
   })),
   getPokemonList: vi.fn(async () => ({ items: [], total: 0 })),
 }));
