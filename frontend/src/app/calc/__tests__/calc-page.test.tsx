@@ -17,7 +17,7 @@ vi.mock('@/lib/api', () => ({
   ]),
   getTypeEfficacy: vi.fn(async () => []),
   getMoves: vi.fn(async () => [
-    { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical' },
+    { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical', flags: [] },
   ]),
   getPokemon: vi.fn(async (id: number) => ({
     id, species_id: id, name: `mon-${id}`, names: { en: `Mon ${id}` }, species_names: { en: `Mon ${id}` },
@@ -60,6 +60,32 @@ describe('CalcPage smoke', () => {
     await waitFor(() => {
       const firstPctAfter = screen.getAllByText(/^\d+(?:\.\d+)?%/)[0].textContent;
       expect(firstPctAfter).not.toBe(firstPctBefore);
+    });
+  });
+
+  it('Mold Breaker on attacker neutralizes Levitate on defender', async () => {
+    render(<LocaleProvider><CalcPage /></LocaleProvider>);
+    await waitFor(() => expect(screen.getAllByText('Mon 94').length).toBeGreaterThan(0));
+
+    await userEvent.click(screen.getAllByText(/tap to add/i)[0]);
+    await userEvent.click(screen.getByText('Earthquake'));
+    await waitFor(() => expect(screen.getAllByText(/^\d+(?:\.\d+)?%/).length).toBeGreaterThan(0));
+
+    const abilityDropdowns = screen.getAllByLabelText('Ability') as HTMLSelectElement[];
+    expect(abilityDropdowns).toHaveLength(2);
+    const [attackerAbility, defenderAbility] = abilityDropdowns;
+
+    await userEvent.selectOptions(defenderAbility, 'levitate');
+    await waitFor(() => {
+      const pcts = screen.getAllByText(/^\d+(?:\.\d+)?%/);
+      const firstPct = pcts[0].textContent ?? '';
+      expect(firstPct.startsWith('0')).toBe(true);
+    });
+
+    await userEvent.selectOptions(attackerAbility, 'mold-breaker');
+    await waitFor(() => {
+      const firstPct = screen.getAllByText(/^\d+(?:\.\d+)?%/)[0].textContent ?? '';
+      expect(firstPct.startsWith('0')).toBe(false);
     });
   });
 });

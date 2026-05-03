@@ -26,6 +26,9 @@ const CSV_FILES: &[&str] = &[
     "ability_flavor_text.csv",
     "pokemon_forms.csv",
     "pokemon_form_names.csv",
+    "move_flag_map.csv",
+    "move_flags.csv",
+    "move_meta.csv",
 ];
 
 pub async fn fetch_all_csvs() -> Result<HashMap<String, String>> {

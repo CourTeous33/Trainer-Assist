@@ -2,6 +2,8 @@ import type { CalcInput, CalcOutcome, CalcResult, UnsupportedResult, Unsupported
 import { computeAllStats, stageMultiplier } from './stats';
 import { getNature } from './natures';
 import { getItem } from './items';
+import { getAbility } from './abilities';
+import { hasMoveFlag } from './move-flags';
 
 type StatPickKey = 'attack' | 'defense' | 'special_attack' | 'special_defense';
 
@@ -55,6 +57,17 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   if (MULTI_HIT_MOVES.has(move.name))       return unsupported('multi-hit');
   if (OHKO_MOVES.has(move.name))            return unsupported('ohko-move');
 
+  const atkAbility = getAbility(attacker.abilityId);
+  let defAbility = getAbility(defender.abilityId);
+  if (atkAbility?.ignoresDefenderAbility) defAbility = undefined;
+
+  let moveType = move.type_ref.id;
+  let typeChangeBoost = 1.0;
+  if (atkAbility?.typeChange && atkAbility.typeChange.from === moveType) {
+    moveType = atkAbility.typeChange.to;
+    typeChangeBoost = atkAbility.typeChange.boost;
+  }
+
   const aBase = attacker.baseStatsOverride ?? attackerSpecies.baseStats;
   const dBase = defender.baseStatsOverride ?? defenderSpecies.baseStats;
   const aTypes = attacker.typesOverride ?? attackerSpecies.types;
@@ -73,6 +86,12 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   let A = offenseStats[offenseKey];
   let D = dStats[defenseKey];
 
+  if (atkAbility?.flatAtkMult
+      && offenseSide === 'attacker'
+      && atkAbility.flatAtkMult.stat === offenseKey) {
+    A = Math.floor(A * atkAbility.flatAtkMult.factor);
+  }
+
   let itemMultDamage = 1.0;
   const item = attacker.itemId ? getItem(attacker.itemId) : undefined;
   const speciesOk = !item || !item.speciesGate || item.speciesGate.includes(attacker.pokemonId);
@@ -85,7 +104,7 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
         A = Math.floor(A * item.attackMult.factor);
       }
     }
-    if (item.typeBoost && item.typeBoost.typeId === move.type_ref.id) {
+    if (item.typeBoost && item.typeBoost.typeId === moveType) {
       itemMultDamage *= item.typeBoost.factor;
     }
     if (item.damageMult) {
@@ -97,14 +116,27 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     }
   }
 
-  // Stages applied after item mults (commutative under multiplication; sub-1% drift from Showdown's stage-first ordering due to Math.floor between steps).
   A = Math.floor(A * stageMultiplier(offenseStages[offenseKey]));
   D = Math.floor(D * stageMultiplier(defender.stages[defenseKey]));
 
   let typeEff = 1.0;
-  for (const dType of dTypes) {
-    const factor = (typeEfficacy[move.type_ref.id]?.[dType] ?? 100) / 100;
-    typeEff *= factor;
+  if (defAbility?.typeImmunity === moveType) {
+    typeEff = 0;
+  } else {
+    for (const dType of dTypes) {
+      const factor = (typeEfficacy[moveType]?.[dType] ?? 100) / 100;
+      typeEff *= factor;
+    }
+    if (defAbility?.typeReduction) {
+      for (const r of defAbility.typeReduction) {
+        if (r.typeId === moveType) typeEff *= r.factor;
+      }
+    }
+    if (defAbility?.wonderGuard && typeEff > 0 && typeEff <= 1) typeEff = 0;
+    if (defAbility?.superEffectiveResist && typeEff > 1) typeEff *= defAbility.superEffectiveResist;
+    if (atkAbility?.notVeryEffectiveBoost && typeEff > 0 && typeEff < 1) {
+      typeEff *= atkAbility.notVeryEffectiveBoost;
+    }
   }
 
   if (item && speciesOk && item.superEffectiveMult && typeEff > 1) {
@@ -115,14 +147,32 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   const defenderItem = defender.itemId ? getItem(defender.itemId) : undefined;
   if (defenderItem?.defenderResistance) {
     const r = defenderItem.defenderResistance;
-    const matchesType = move.type_ref.id === r.typeId;
+    const matchesType = moveType === r.typeId;
     const meetsThreshold = !r.requireSuperEffective || typeEff > 1;
     if (matchesType && meetsThreshold) {
       berryMultDamage *= r.factor;
     }
   }
 
-  const stab = aTypes.includes(move.type_ref.id) ? 1.5 : 1.0;
+  const stabFactor = atkAbility?.stabFactor ?? 1.5;
+  const stab = aTypes.includes(moveType) ? stabFactor : 1.0;
+
+  let abilityDmgMult = typeChangeBoost;
+  if (atkAbility?.conditionalDmgMult) {
+    const c = atkAbility.conditionalDmgMult;
+    const matches = c.kind === 'flag'
+      ? hasMoveFlag(move, c.flag)
+      : (move.power ?? 0) <= c.powerThreshold;
+    if (matches) abilityDmgMult *= c.factor;
+  }
+  if (atkAbility?.offenseTypeBoost && atkAbility.offenseTypeBoost.typeId === moveType) {
+    abilityDmgMult *= atkAbility.offenseTypeBoost.factor;
+  }
+
+  let abilityDefMult = 1.0;
+  if (defAbility?.soundReduction && hasMoveFlag(move, 'sound')) {
+    abilityDefMult *= defAbility.soundReduction;
+  }
 
   const L = attacker.level;
   const P = move.power;
@@ -132,7 +182,9 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
   const rolls: number[] = [];
   for (let i = 85; i <= 100; i++) {
     const roll = i / 100;
-    const dmg = typeEff === 0 ? 0 : Math.floor(baseDamage * stab * typeEff * itemMultDamage * berryMultDamage * roll);
+    const dmg = typeEff === 0
+      ? 0
+      : Math.floor(baseDamage * stab * typeEff * itemMultDamage * berryMultDamage * abilityDmgMult * abilityDefMult * roll);
     rolls.push(dmg);
   }
 
@@ -151,7 +203,10 @@ export function calculateDamage(input: CalcInput): CalcOutcome {
     twoHkoPct: 0,
     threeHkoPct: 0,
     qualifier: '',
-    modifiers: { stab, typeEff, item: itemMultDamage, berry: berryMultDamage },
+    modifiers: {
+      stab, typeEff, item: itemMultDamage, berry: berryMultDamage,
+      abilityAtk: abilityDmgMult, abilityDef: abilityDefMult,
+    },
     attackerStat: A,
     defenderStat: D,
   };

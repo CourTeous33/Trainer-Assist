@@ -503,3 +503,112 @@ fn type_names_have_pinyin_when_chinese_available() {
     let electric = result.type_refs.iter().find(|t| t.name == "Electric").unwrap();
     assert!(electric.names.zh_pinyin.is_none());
 }
+
+fn empty_parsed() -> seed::parse::ParsedData {
+    seed::parse::ParsedData {
+        pokemon: vec![], pokemon_types: vec![], pokemon_stats: vec![],
+        pokemon_species: vec![], pokemon_species_names: vec![],
+        types: vec![], type_names: vec![], type_efficacy: vec![],
+        moves: vec![], move_names: vec![], pokemon_moves: vec![],
+        abilities: vec![], ability_names: vec![], pokemon_abilities: vec![],
+        ability_flavor_text: vec![], pokemon_forms: vec![], pokemon_form_names: vec![],
+        move_flag_map: vec![], move_flags: vec![], move_meta: vec![],
+    }
+}
+
+#[test]
+fn move_flags_whitelisted_and_attached() {
+    use seed::parse::{MoveFlagMapRow, MoveFlagRow, MoveRow, MoveNameRow};
+    let mut data = empty_parsed();
+    data.moves = vec![
+        MoveRow { id: 1, identifier: "ice-punch".into(), generation_id: 1, type_id: 15, power: Some(75), pp: Some(15), accuracy: Some(100), priority: 0, target_id: 0, damage_class_id: 2 },
+        MoveRow { id: 2, identifier: "body-slam".into(), generation_id: 1, type_id: 1, power: Some(85), pp: Some(15), accuracy: Some(100), priority: 0, target_id: 0, damage_class_id: 2 },
+    ];
+    data.move_names = vec![
+        MoveNameRow { move_id: 1, local_language_id: 9, name: "Ice Punch".into() },
+        MoveNameRow { move_id: 2, local_language_id: 9, name: "Body Slam".into() },
+    ];
+    data.types = vec![
+        seed::parse::TypeRow { id: 1, identifier: "normal".into() },
+        seed::parse::TypeRow { id: 15, identifier: "ice".into() },
+    ];
+    data.type_names = vec![
+        seed::parse::TypeNameRow { type_id: 1, local_language_id: 9, name: "Normal".into() },
+        seed::parse::TypeNameRow { type_id: 15, local_language_id: 9, name: "Ice".into() },
+    ];
+    data.move_flag_map = vec![
+        MoveFlagMapRow { move_id: 1, move_flag_id: 1 },   // contact
+        MoveFlagMapRow { move_id: 1, move_flag_id: 8 },   // punch
+        MoveFlagMapRow { move_id: 1, move_flag_id: 2 },   // charge — should be filtered out
+        MoveFlagMapRow { move_id: 2, move_flag_id: 1 },   // contact
+    ];
+    data.move_flags = vec![
+        MoveFlagRow { id: 1, identifier: "contact".into() },
+        MoveFlagRow { id: 2, identifier: "charge".into() },
+        MoveFlagRow { id: 8, identifier: "punch".into() },
+    ];
+    let out = transform(&data);
+    let ice_punch = out.move_summaries.iter().find(|m| m.id == 1).unwrap();
+    let body_slam = out.move_summaries.iter().find(|m| m.id == 2).unwrap();
+    assert_eq!(ice_punch.flags, vec!["contact".to_string(), "punch".to_string()]);
+    assert_eq!(body_slam.flags, vec!["contact".to_string()]);
+}
+
+#[test]
+fn move_flags_recoil_derived_from_negative_drain() {
+    use seed::parse::{MoveMetaRow, MoveRow, MoveNameRow};
+    let mut data = empty_parsed();
+    data.moves = vec![
+        MoveRow { id: 100, identifier: "double-edge".into(), generation_id: 1, type_id: 1, power: Some(120), pp: Some(15), accuracy: Some(100), priority: 0, target_id: 0, damage_class_id: 2 },
+        MoveRow { id: 101, identifier: "tackle".into(), generation_id: 1, type_id: 1, power: Some(40), pp: Some(35), accuracy: Some(100), priority: 0, target_id: 0, damage_class_id: 2 },
+    ];
+    data.move_names = vec![
+        MoveNameRow { move_id: 100, local_language_id: 9, name: "Double-Edge".into() },
+        MoveNameRow { move_id: 101, local_language_id: 9, name: "Tackle".into() },
+    ];
+    data.types = vec![
+        seed::parse::TypeRow { id: 1, identifier: "normal".into() },
+    ];
+    data.type_names = vec![
+        seed::parse::TypeNameRow { type_id: 1, local_language_id: 9, name: "Normal".into() },
+    ];
+    data.move_meta = vec![
+        MoveMetaRow { move_id: 100, drain: -33, meta_category_id: 0, meta_ailment_id: 0, min_hits: None, max_hits: None, min_turns: None, max_turns: None, healing: 0, crit_rate: 0, ailment_chance: 0, flinch_chance: 0, stat_chance: 0 },
+        MoveMetaRow { move_id: 101, drain: 0, meta_category_id: 0, meta_ailment_id: 0, min_hits: None, max_hits: None, min_turns: None, max_turns: None, healing: 0, crit_rate: 0, ailment_chance: 0, flinch_chance: 0, stat_chance: 0 },
+    ];
+    let out = transform(&data);
+    let de = out.move_summaries.iter().find(|m| m.id == 100).unwrap();
+    let tackle = out.move_summaries.iter().find(|m| m.id == 101).unwrap();
+    assert!(de.flags.contains(&"recoil".to_string()));
+    assert!(!tackle.flags.contains(&"recoil".to_string()));
+}
+
+#[test]
+fn move_flags_sorted_and_deduped() {
+    use seed::parse::{MoveFlagMapRow, MoveFlagRow, MoveRow, MoveNameRow};
+    let mut data = empty_parsed();
+    data.moves = vec![
+        MoveRow { id: 1, identifier: "drain-punch".into(), generation_id: 1, type_id: 2, power: Some(75), pp: Some(10), accuracy: Some(100), priority: 0, target_id: 0, damage_class_id: 2 },
+    ];
+    data.move_names = vec![
+        MoveNameRow { move_id: 1, local_language_id: 9, name: "Drain Punch".into() },
+    ];
+    data.types = vec![
+        seed::parse::TypeRow { id: 2, identifier: "fighting".into() },
+    ];
+    data.type_names = vec![
+        seed::parse::TypeNameRow { type_id: 2, local_language_id: 9, name: "Fighting".into() },
+    ];
+    data.move_flag_map = vec![
+        MoveFlagMapRow { move_id: 1, move_flag_id: 8 },
+        MoveFlagMapRow { move_id: 1, move_flag_id: 1 },
+        MoveFlagMapRow { move_id: 1, move_flag_id: 8 },
+    ];
+    data.move_flags = vec![
+        MoveFlagRow { id: 1, identifier: "contact".into() },
+        MoveFlagRow { id: 8, identifier: "punch".into() },
+    ];
+    let out = transform(&data);
+    let dp = out.move_summaries.iter().find(|m| m.id == 1).unwrap();
+    assert_eq!(dp.flags, vec!["contact".to_string(), "punch".to_string()]);
+}

@@ -100,6 +100,11 @@ fn make_csvs() -> HashMap<String, String> {
          9,15,9,Older description.\n\
          9,20,1,せいでんきを　おびた　からだに　さわると　しびれることがある。\n".into());
 
+    csvs.insert("move_flag_map.csv".into(), "move_id,move_flag_id\n".into());
+    csvs.insert("move_flags.csv".into(), "id,identifier\n".into());
+    csvs.insert("move_meta.csv".into(),
+        "move_id,meta_category_id,meta_ailment_id,min_hits,max_hits,min_turns,max_turns,drain,healing,crit_rate,ailment_chance,flinch_chance,stat_chance\n".into());
+
     csvs
 }
 
@@ -131,6 +136,30 @@ fn parse_all_handles_missing_csv() {
     csvs.remove("pokemon_moves.csv");
     let parsed = parse_all(&csvs).unwrap();
     assert_eq!(parsed.pokemon_moves.len(), 0);
+}
+
+#[test]
+fn parse_move_flags_and_meta() {
+    let mut csvs = make_csvs();
+    csvs.insert("move_flag_map.csv".into(),
+        "move_id,move_flag_id\n\
+         1,1\n\
+         1,8\n\
+         2,2\n".into());
+    csvs.insert("move_flags.csv".into(),
+        "id,identifier\n\
+         1,contact\n\
+         2,charge\n\
+         8,punch\n".into());
+    csvs.insert("move_meta.csv".into(),
+        "move_id,meta_category_id,meta_ailment_id,min_hits,max_hits,min_turns,max_turns,drain,healing,crit_rate,ailment_chance,flinch_chance,stat_chance\n\
+         1,0,0,,,,,0,0,0,0,0,0\n\
+         2,0,0,,,,,-25,0,0,0,0,0\n".into());
+
+    let parsed = parse_all(&csvs).expect("parse_all");
+    assert_eq!(parsed.move_flag_map.len(), 3);
+    assert_eq!(parsed.move_flags.len(), 3);
+    assert!(parsed.move_meta.iter().any(|m| m.move_id == 2 && m.drain == -25));
 }
 
 #[test]

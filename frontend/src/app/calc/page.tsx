@@ -18,6 +18,7 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import EVStatTable from '@/components/EVStatTable';
 import NatureDropdown from '@/components/NatureDropdown';
 import ItemDropdown from '@/components/ItemDropdown';
+import AbilityDropdown from '@/components/AbilityDropdown';
 import StatStageRow from '@/components/StatStageRow';
 import BaseStatOverridePanel from '@/components/BaseStatOverridePanel';
 import PokemonPicker from '@/components/PokemonPicker';
@@ -41,6 +42,8 @@ type Action =
   | { type: 'SET_DEFENDER_NATURE'; nature: NatureId }
   | { type: 'SET_ATTACKER_ITEM'; itemId: string | null }
   | { type: 'SET_DEFENDER_ITEM'; itemId: string | null }
+  | { type: 'SET_ATTACKER_ABILITY'; abilityId: string | null }
+  | { type: 'SET_DEFENDER_ABILITY'; abilityId: string | null }
   | { type: 'SET_ATTACKER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_DEFENDER_OVERRIDE'; base: Stats | null; types: number[] | null }
   | { type: 'SET_ATTACKER_STAGE'; stat: keyof StatStages; value: number }
@@ -78,6 +81,8 @@ function calcReducer(state: CalcState, action: Action): CalcState {
     case 'SET_DEFENDER_NATURE':  return { ...state, defender: { ...state.defender, nature: action.nature } };
     case 'SET_ATTACKER_ITEM':    return { ...state, attacker: { ...state.attacker, itemId: action.itemId } };
     case 'SET_DEFENDER_ITEM':    return { ...state, defender: { ...state.defender, itemId: action.itemId } };
+    case 'SET_ATTACKER_ABILITY': return { ...state, attacker: { ...state.attacker, abilityId: action.abilityId } };
+    case 'SET_DEFENDER_ABILITY': return { ...state, defender: { ...state.defender, abilityId: action.abilityId } };
     case 'SET_ATTACKER_OVERRIDE': return { ...state, attacker: { ...state.attacker, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_DEFENDER_OVERRIDE': return { ...state, defender: { ...state.defender, baseStatsOverride: action.base, typesOverride: action.types } };
     case 'SET_ATTACKER_STAGE': {
@@ -357,6 +362,7 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
   const setLvl = (l: number) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_LEVEL' : 'SET_DEFENDER_LEVEL', level: l });
   const setNat = (n: NatureId) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_NATURE' : 'SET_DEFENDER_NATURE', nature: n });
   const setItem = (i: string | null) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_ITEM' : 'SET_DEFENDER_ITEM', itemId: i });
+  const setAbility = (a: string | null) => dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_ABILITY' : 'SET_DEFENDER_ABILITY', abilityId: a });
   const setOver = (base: Stats | null, types: number[] | null) =>
     dispatch({ type: side === 'attacker' ? 'SET_ATTACKER_OVERRIDE' : 'SET_DEFENDER_OVERRIDE', base, types });
   const setStage = (stat: keyof StatStages, value: number) => dispatch(
@@ -407,9 +413,10 @@ function SidePanel({ side, state, detail, allTypes, dispatch, openPicker, locale
         allTypes={allTypes}
         onChange={({ base, types }) => setOver(base, types)}
       />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <NatureDropdown value={cfg.nature} onChange={setNat} />
         <ItemDropdown value={cfg.itemId} onChange={setItem} />
+        <AbilityDropdown value={cfg.abilityId} onChange={setAbility} speciesAbilities={detail.abilities} />
       </div>
       <StatStageRow stages={cfg.stages} onChange={setStage} />
       <EVStatTable

@@ -5,6 +5,8 @@ import { computeKO, qualifier } from './ko';
 export * from './types';
 export { NATURES, getNature, NATURE_MULTIPLIER } from './natures';
 export { ITEMS, ITEMS_BY_TIER, getItem } from './items';
+export { ABILITIES, getAbility, type Ability } from './abilities';
+export { hasMoveFlag, type MoveFlag } from './move-flags';
 export {
   computeStat, computeAllStats, clampEVsForMode, convertEVsBetweenModes, evTotal,
   isLevelLockedForMode, lockedLevelForMode, lockedIVsForMode, stageMultiplier,

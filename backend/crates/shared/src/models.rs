@@ -96,6 +96,8 @@ pub struct MoveSummary {
     pub accuracy: Option<i32>,
     pub pp: Option<i32>,
     pub damage_class: String,
+    #[serde(default)]
+    pub flags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

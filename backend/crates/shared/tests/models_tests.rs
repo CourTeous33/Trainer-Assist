@@ -169,6 +169,7 @@ fn move_summary_with_null_power() {
         accuracy: Some(100),
         pp: Some(40),
         damage_class: "status".to_string(),
+        flags: Vec::new(),
     };
     let json = serde_json::to_string(&move_s).unwrap();
     assert!(json.contains("\"power\":null"));
@@ -298,4 +299,41 @@ fn zh_pinyin_skipped_when_none() {
     };
     let json = serde_json::to_string(&names).unwrap();
     assert!(!json.contains("zh_pinyin"));
+}
+
+#[test]
+fn move_summary_flags_roundtrip() {
+    use shared::models::{LocalizedNames, MoveSummary, TypeRef};
+    let m = MoveSummary {
+        id: 1,
+        name: "ice-punch".to_string(),
+        names: LocalizedNames { en: "Ice Punch".to_string(), ja: None, zh: None, zh_pinyin: None },
+        type_ref: TypeRef { id: 15, name: "ice".to_string(), names: LocalizedNames { en: "Ice".to_string(), ja: None, zh: None, zh_pinyin: None } },
+        power: Some(75),
+        accuracy: Some(100),
+        pp: Some(15),
+        damage_class: "physical".to_string(),
+        flags: vec!["contact".to_string(), "punch".to_string()],
+    };
+    let json = serde_json::to_string(&m).unwrap();
+    let back: MoveSummary = serde_json::from_str(&json).unwrap();
+    assert_eq!(back.flags, vec!["contact".to_string(), "punch".to_string()]);
+}
+
+#[test]
+fn move_summary_default_empty_flags() {
+    use shared::models::MoveSummary;
+    // JSON without `flags` should deserialize to an empty vec via #[serde(default)].
+    let json = r#"{
+        "id": 33,
+        "name": "tackle",
+        "names": { "en": "Tackle" },
+        "type_ref": { "id": 1, "name": "normal", "names": { "en": "Normal" } },
+        "power": 40,
+        "accuracy": 100,
+        "pp": 35,
+        "damage_class": "physical"
+    }"#;
+    let m: MoveSummary = serde_json::from_str(json).unwrap();
+    assert!(m.flags.is_empty());
 }

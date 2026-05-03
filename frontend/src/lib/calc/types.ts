@@ -53,6 +53,7 @@ export interface PokemonConfig {
   evs: Stats;
   nature: NatureId;
   itemId: string | null;
+  abilityId: string | null;
   stages: StatStages;
 }
 
@@ -83,7 +84,7 @@ export interface CalcResult {
   twoHkoPct: number;
   threeHkoPct: number;
   qualifier: string;
-  modifiers: { stab: number; typeEff: number; item: number; berry: number };
+  modifiers: { stab: number; typeEff: number; item: number; berry: number; abilityAtk: number; abilityDef: number };
   attackerStat: number;
   defenderStat: number;
 }

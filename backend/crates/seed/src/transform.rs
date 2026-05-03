@@ -634,6 +634,23 @@ pub fn transform(data: &ParsedData) -> TransformedData {
         }
     };
 
+    let flag_identifiers: HashMap<i32, String> = data
+        .move_flags
+        .iter()
+        .map(|f| (f.id, f.identifier.clone()))
+        .collect();
+
+    let mut move_flag_index: HashMap<i32, Vec<i32>> = HashMap::new();
+    for r in data.move_flag_map.iter() {
+        move_flag_index.entry(r.move_id).or_default().push(r.move_flag_id);
+    }
+
+    let move_drain: HashMap<i32, i32> =
+        data.move_meta.iter().map(|m| (m.move_id, m.drain)).collect();
+
+    const FLAG_WHITELIST: &[&str] =
+        &["contact", "punch", "bite", "pulse", "sound", "slicing"];
+
     let mut move_summaries: Vec<MoveSummary> = data
         .moves
         .iter()
@@ -645,6 +662,20 @@ pub fn transform(data: &ParsedData) -> TransformedData {
                 move_name_ja.get(&m.id).cloned(),
                 move_name_zh.get(&m.id).cloned(),
             );
+            let mut flags: Vec<String> = move_flag_index
+                .get(&m.id)
+                .map(|ids| {
+                    ids.iter()
+                        .filter_map(|fid| flag_identifiers.get(fid).cloned())
+                        .filter(|ident| FLAG_WHITELIST.contains(&ident.as_str()))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            if move_drain.get(&m.id).copied().unwrap_or(0) < 0 {
+                flags.push("recoil".to_string());
+            }
+            flags.sort();
+            flags.dedup();
             Some(MoveSummary {
                 id: m.id,
                 name,
@@ -654,6 +685,7 @@ pub fn transform(data: &ParsedData) -> TransformedData {
                 accuracy: m.accuracy,
                 pp: m.pp,
                 damage_class: damage_class_name(m.damage_class_id),
+                flags,
             })
         })
         .collect();

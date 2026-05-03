@@ -162,6 +162,43 @@ pub struct PokemonFormNameRow {
     pub pokemon_name: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct MoveFlagMapRow {
+    pub move_id: i32,
+    pub move_flag_id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MoveFlagRow {
+    pub id: i32,
+    pub identifier: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MoveMetaRow {
+    pub move_id: i32,
+    #[serde(default)]
+    pub meta_category_id: i32,
+    #[serde(default)]
+    pub meta_ailment_id: i32,
+    pub min_hits: Option<i32>,
+    pub max_hits: Option<i32>,
+    pub min_turns: Option<i32>,
+    pub max_turns: Option<i32>,
+    #[serde(default)]
+    pub drain: i32,
+    #[serde(default)]
+    pub healing: i32,
+    #[serde(default)]
+    pub crit_rate: i32,
+    #[serde(default)]
+    pub ailment_chance: i32,
+    #[serde(default)]
+    pub flinch_chance: i32,
+    #[serde(default)]
+    pub stat_chance: i32,
+}
+
 // ---------------------------------------------------------------------------
 // Parsed data container
 // ---------------------------------------------------------------------------
@@ -184,6 +221,9 @@ pub struct ParsedData {
     pub ability_flavor_text: Vec<AbilityFlavorTextRow>,
     pub pokemon_forms: Vec<PokemonFormRow>,
     pub pokemon_form_names: Vec<PokemonFormNameRow>,
+    pub move_flag_map: Vec<MoveFlagMapRow>,
+    pub move_flags: Vec<MoveFlagRow>,
+    pub move_meta: Vec<MoveMetaRow>,
 }
 
 // ---------------------------------------------------------------------------
@@ -265,5 +305,11 @@ pub fn parse_all(csvs: &HashMap<String, String>) -> Result<ParsedData> {
             "pokemon_form_names.csv",
         )
         .context("parsing pokemon_form_names.csv")?,
+        move_flag_map: parse_csv(get("move_flag_map.csv"), "move_flag_map.csv")
+            .context("parsing move_flag_map.csv")?,
+        move_flags: parse_csv(get("move_flags.csv"), "move_flags.csv")
+            .context("parsing move_flags.csv")?,
+        move_meta: parse_csv(get("move_meta.csv"), "move_meta.csv")
+            .context("parsing move_meta.csv")?,
     })
 }
