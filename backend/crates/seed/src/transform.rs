@@ -654,6 +654,7 @@ pub fn transform(data: &ParsedData) -> TransformedData {
                 accuracy: m.accuracy,
                 pp: m.pp,
                 damage_class: damage_class_name(m.damage_class_id),
+                flags: Vec::new(), // populated in Task 4
             })
         })
         .collect();
