@@ -28,7 +28,7 @@ describe('DamageResultCard', () => {
             minPct: 50, maxPct: 50, avgPct: 50,
             ohkoPct: 0, twoHkoPct: 100, threeHkoPct: 100,
             qualifier: 'guaranteed 2HKO',
-            modifiers: { stab: 1.5, typeEff: 1.0, item: 1.0, berry: 1.0 },
+            modifiers: { stab: 1.5, typeEff: 1.0, item: 1.0, berry: 1.0, abilityAtk: 1.0, abilityDef: 1.0 },
             attackerStat: 100, defenderStat: 100,
           }}
         />
@@ -49,7 +49,7 @@ describe('DamageResultCard', () => {
             minPct: 40, maxPct: 55, avgPct: 47,
             ohkoPct: 0, twoHkoPct: 100, threeHkoPct: 100,
             qualifier: 'guaranteed 2HKO',
-            modifiers: { stab: 1.5, typeEff: 1.0, item: 1.0, berry: 1.0 },
+            modifiers: { stab: 1.5, typeEff: 1.0, item: 1.0, berry: 1.0, abilityAtk: 1.0, abilityDef: 1.0 },
             attackerStat: 100, defenderStat: 100,
           }}
         />
