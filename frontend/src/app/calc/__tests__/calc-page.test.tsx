@@ -17,7 +17,7 @@ vi.mock('@/lib/api', () => ({
   ]),
   getTypeEfficacy: vi.fn(async () => []),
   getMoves: vi.fn(async () => [
-    { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical' },
+    { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical', flags: [] },
   ]),
   getPokemon: vi.fn(async (id: number) => ({
     id, species_id: id, name: `mon-${id}`, names: { en: `Mon ${id}` }, species_names: { en: `Mon ${id}` },

@@ -73,6 +73,7 @@ export interface MoveSummary {
   accuracy: number | null;
   pp: number | null;
   damage_class: string;
+  flags: string[];
 }
 
 export interface Team {

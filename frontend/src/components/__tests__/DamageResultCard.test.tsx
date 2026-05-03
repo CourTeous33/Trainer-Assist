@@ -8,7 +8,7 @@ import type { MoveSummary } from '@/lib/types';
 const MOVE: MoveSummary = {
   id: 1, name: 'tackle', names: { en: 'Tackle' },
   type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } },
-  power: 40, accuracy: 100, pp: 35, damage_class: 'physical',
+  power: 40, accuracy: 100, pp: 35, damage_class: 'physical', flags: [],
 };
 
 describe('DamageResultCard', () => {

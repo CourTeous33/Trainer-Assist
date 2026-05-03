@@ -26,7 +26,7 @@ function input(over: Partial<CalcInput>): CalcInput {
     },
     attackerSpecies: { types: [1], baseStats },
     defenderSpecies: { types: [1], baseStats },
-    move: { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: 40, accuracy: 100, pp: 35, damage_class: 'physical' },
+    move: { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: 40, accuracy: 100, pp: 35, damage_class: 'physical', flags: [] },
     typeEfficacy: identityEfficacy(),
     ...over,
   };
@@ -44,7 +44,7 @@ describe('calculateDamage', () => {
 
   it('returns unsupported for status moves (power null)', () => {
     const out = calculateDamage(input({
-      move: { id: 1, name: 'splash', names: { en: 'Splash' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: null, accuracy: null, pp: 40, damage_class: 'status' },
+      move: { id: 1, name: 'splash', names: { en: 'Splash' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: null, accuracy: null, pp: 40, damage_class: 'status', flags: [] },
     }));
     expect('unsupportedReason' in out).toBe(true);
   });
@@ -136,7 +136,7 @@ describe('calculateDamage', () => {
       },
       attackerSpecies: { types: [16, 5], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
       defenderSpecies: { types: [16, 5], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
-      move: { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical' },
+      move: { id: 89, name: 'earthquake', names: { en: 'Earthquake' }, type_ref: { id: 5, name: 'ground', names: { en: 'Ground' } }, power: 100, accuracy: 100, pp: 10, damage_class: 'physical', flags: [] },
       typeEfficacy: eff,
     })) as { rolls: number[]; modifiers: { stab: number; typeEff: number } };
     expect(out.modifiers.stab).toBe(1.5);
@@ -146,7 +146,7 @@ describe('calculateDamage', () => {
   });
 
   it('+2 SpA roughly doubles rolls vs the same defender on a special move', () => {
-    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const, flags: [] };
     const baseline = calculateDamage(input({ move: specialMove })) as { rolls: number[] };
     const boosted = calculateDamage(input({
       move: specialMove,
@@ -157,7 +157,7 @@ describe('calculateDamage', () => {
   });
 
   it('-1 defender SpD increases damage from a special move', () => {
-    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const specialMove = { id: 94, name: 'psychic', names: { en: 'Psychic' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 90, accuracy: 100, pp: 10, damage_class: 'special' as const, flags: [] };
     const baseline = calculateDamage(input({ move: specialMove })) as { rolls: number[] };
     const dropped = calculateDamage(input({
       move: specialMove,
@@ -192,7 +192,7 @@ describe('calculateDamage', () => {
   it('Chople Berry halves super-effective Fighting damage', () => {
     const eff = identityEfficacy();
     eff[2][1] = 200; // Fighting super-effective vs Normal
-    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const, flags: [] };
     const noBerry = calculateDamage(input({
       defenderSpecies: { types: [1], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
       typeEfficacy: eff,
@@ -215,7 +215,7 @@ describe('calculateDamage', () => {
   it('Chople Berry does NOT apply to a not-very-effective Fighting move', () => {
     const eff = identityEfficacy();
     eff[2][14] = 50; // Fighting not-very-effective vs Psychic
-    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const, flags: [] };
     const out = calculateDamage(input({
       defenderSpecies: { types: [14], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
       typeEfficacy: eff,
@@ -228,7 +228,7 @@ describe('calculateDamage', () => {
   it('Chople Berry does NOT apply to non-Fighting super-effective move', () => {
     const eff = identityEfficacy();
     eff[10][7] = 200; // Fire super-effective vs Bug
-    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const };
+    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const, flags: [] };
     const out = calculateDamage(input({
       defenderSpecies: { types: [7], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
       typeEfficacy: eff,
@@ -239,7 +239,7 @@ describe('calculateDamage', () => {
   });
 
   it('Chilan Berry halves Normal moves regardless of effectiveness', () => {
-    const normalMove = { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: 40, accuracy: 100, pp: 35, damage_class: 'physical' as const };
+    const normalMove = { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: { id: 1, name: 'normal', names: { en: 'Normal' } }, power: 40, accuracy: 100, pp: 35, damage_class: 'physical' as const, flags: [] };
     const neutral = calculateDamage(input({
       move: normalMove,
       defender: { ...input({}).defender, itemId: 'chilan-berry' },
@@ -248,7 +248,7 @@ describe('calculateDamage', () => {
   });
 
   it('Chilan Berry does NOT apply to non-Normal moves', () => {
-    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const };
+    const fireMove = { id: 1, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: { id: 10, name: 'fire', names: { en: 'Fire' } }, power: 90, accuracy: 100, pp: 15, damage_class: 'special' as const, flags: [] };
     const out = calculateDamage(input({
       move: fireMove,
       defender: { ...input({}).defender, itemId: 'chilan-berry' },
@@ -259,7 +259,7 @@ describe('calculateDamage', () => {
   it('Choice Band on attacker composes with Chople on defender', () => {
     const eff = identityEfficacy();
     eff[2][1] = 200; // Fighting super-effective vs Normal
-    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const };
+    const fightingMove = { id: 1, name: 'close-combat', names: { en: 'Close Combat' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 120, accuracy: 100, pp: 5, damage_class: 'physical' as const, flags: [] };
     const out = calculateDamage(input({
       defenderSpecies: { types: [1], baseStats: { hp: 100, attack: 100, defense: 100, special_attack: 100, special_defense: 100, speed: 100 } },
       typeEfficacy: eff,
@@ -271,7 +271,7 @@ describe('calculateDamage', () => {
   });
 
   it('Body Press uses attacker Defense as offense stat', () => {
-    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const, flags: [] };
     // High Defense, low Attack on the attacker.
     const aDefHigh = { ...input({}).attacker, baseStatsOverride: { hp: 100, attack: 50, defense: 200, special_attack: 50, special_defense: 50, speed: 50 } };
     const aAtkHigh = { ...input({}).attacker, baseStatsOverride: { hp: 100, attack: 200, defense: 50, special_attack: 50, special_defense: 50, speed: 50 } };
@@ -284,7 +284,7 @@ describe('calculateDamage', () => {
   });
 
   it('Body Press is unaffected by attacker Atk stage but reads attacker Def stage', () => {
-    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const, flags: [] };
     const baseline = calculateDamage(input({ move: bodyPress })) as { attackerStat: number };
     const atkBoosted = calculateDamage(input({
       move: bodyPress,
@@ -299,7 +299,7 @@ describe('calculateDamage', () => {
   });
 
   it('Choice Band does not boost Body Press', () => {
-    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const };
+    const bodyPress = { id: 1, name: 'body-press', names: { en: 'Body Press' }, type_ref: { id: 2, name: 'fighting', names: { en: 'Fighting' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'physical' as const, flags: [] };
     const noItem = calculateDamage(input({ move: bodyPress })) as { attackerStat: number };
     const withBand = calculateDamage(input({
       move: bodyPress,
@@ -309,7 +309,7 @@ describe('calculateDamage', () => {
   });
 
   it('Foul Play uses defender Attack and defender Atk stage', () => {
-    const foulPlay = { id: 1, name: 'foul-play', names: { en: 'Foul Play' }, type_ref: { id: 17, name: 'dark', names: { en: 'Dark' } }, power: 95, accuracy: 100, pp: 15, damage_class: 'physical' as const };
+    const foulPlay = { id: 1, name: 'foul-play', names: { en: 'Foul Play' }, type_ref: { id: 17, name: 'dark', names: { en: 'Dark' } }, power: 95, accuracy: 100, pp: 15, damage_class: 'physical' as const, flags: [] };
     // Defender has high Attack, low everything else.
     const dHighAtk = { ...input({}).defender, baseStatsOverride: { hp: 100, attack: 200, defense: 50, special_attack: 50, special_defense: 50, speed: 50 } };
     const baseline = calculateDamage(input({ move: foulPlay, defender: dHighAtk })) as { attackerStat: number };
@@ -329,7 +329,7 @@ describe('calculateDamage', () => {
   });
 
   it('Psyshock divides by defender Defense (not SpD) and reads defender Def stage', () => {
-    const psyshock = { id: 1, name: 'psyshock', names: { en: 'Psyshock' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'special' as const };
+    const psyshock = { id: 1, name: 'psyshock', names: { en: 'Psyshock' }, type_ref: { id: 14, name: 'psychic', names: { en: 'Psychic' } }, power: 80, accuracy: 100, pp: 10, damage_class: 'special' as const, flags: [] };
     const baseline = calculateDamage(input({ move: psyshock })) as { defenderStat: number };
     const defBoost = calculateDamage(input({
       move: psyshock,

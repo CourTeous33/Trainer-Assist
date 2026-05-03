@@ -11,9 +11,9 @@ const TYPES: TypeRef[] = [
 ];
 
 const MOVES: MoveSummary[] = [
-  { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: TYPES[0], power: 40, accuracy: 100, pp: 35, damage_class: 'physical' },
-  { id: 2, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: TYPES[1], power: 90, accuracy: 100, pp: 15, damage_class: 'special' },
-  { id: 3, name: 'growl', names: { en: 'Growl' }, type_ref: TYPES[0], power: null, accuracy: 100, pp: 40, damage_class: 'status' },
+  { id: 1, name: 'tackle', names: { en: 'Tackle' }, type_ref: TYPES[0], power: 40, accuracy: 100, pp: 35, damage_class: 'physical', flags: [] },
+  { id: 2, name: 'flamethrower', names: { en: 'Flamethrower' }, type_ref: TYPES[1], power: 90, accuracy: 100, pp: 15, damage_class: 'special', flags: [] },
+  { id: 3, name: 'growl', names: { en: 'Growl' }, type_ref: TYPES[0], power: null, accuracy: 100, pp: 40, damage_class: 'status', flags: [] },
 ];
 
 describe('MovePicker', () => {
